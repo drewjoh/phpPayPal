@@ -20,6 +20,10 @@
 	Please give credit where credit is due. :)
 */
 
+/*
+	phpPayPal Version 0.5.2
+*/
+
 
 
 class phpPayPal { 
