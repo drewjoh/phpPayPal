@@ -31,10 +31,12 @@ class phpPayPal {
 	public $Response;
 	
 	// Error Variables
-	/*	$Error = an array of PayPal's response to any paypal errors
+	/*	
+		$Error = an array of PayPal's response to any paypal errors
 		All $_error's = are filled for any error that occurs, including PayPal errors
 		Typically, if a method returns false, the $_error's should be filled with error information
-		*/
+	*/
+	
 	// Array of the error response from PayPal
 	//  - [TIMESTAMP] [CORRELATIONID] [ACK] [L_ERRORCODE0] [L_SHORTMESSAGE0] [L_LONGMESSAGE0] [L_SEVERITYCODE0] [VERSION] [BUILD]
 	public $Error; 
