@@ -130,6 +130,8 @@ class phpPayPal {
 	public $channel_type; // CHANNELTYPE
 	public $solution_type; // SOLUTIONTYPE
 	
+	public $return_fmf_details; // RETURNFMFDETAILS
+	
 	 // Variables found in Authorize and Capture
 	
 	public $authorization_id; // AUTHORIZATIONID
@@ -342,6 +344,7 @@ class phpPayPal {
 		'DoDirectPayment' => array(
 				'payment_type' => array('name' => 'PAYMENTACTION', 'required' => 'yes'),
 				'ip_address' => array('name' => 'IPADDRESS', 'required' => 'yes'),
+				'return_fmf_details' => array('name' => 'RETURNFMFDETAILS', 'required' => 'no'),
 				'amount_total' => array('name' => 'AMT', 'required' => 'yes'), 
 				'credit_card_type' => array('name' => 'CREDITCARDTYPE', 'required' => 'yes'), 
 				'credit_card_number' => array('name' => 'ACCT', 'required' => 'yes'), 
