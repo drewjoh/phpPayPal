@@ -113,7 +113,7 @@ class phpPayPal {
 	
 	public $description; // DESC
 	public $custom; // CUSTOM
-	public $invoice; // INVNUM
+	public $invoice_number; // INVNUM
 	
 	public $note; // NOTE
 	
@@ -129,6 +129,12 @@ class phpPayPal {
 	public $payflow_color; // PAYFLOWCOLOR
 	public $channel_type; // CHANNELTYPE
 	public $solution_type; // SOLUTIONTYPE
+	
+	 // Variables found in Authorize and Capture
+	
+	public $authorization_id; // AUTHORIZATIONID
+	public $complete_type; // COMPLETETYPE
+	
 	
 	 // Variables found (usually) to be returned to us
 	
@@ -354,7 +360,7 @@ class phpPayPal {
 				'amount_tax' => array('name' => 'TAXAMT', 'required' => 'no'), 
 				'description' => array('name' => 'DESC', 'required' => 'no'), 
 				'custom' => array('name' => 'CUSTOM', 'required' => 'no'), 
-				'invoice' => array('name' => 'INVNUM', 'required' => 'no'), 
+				'invoice_number' => array('name' => 'INVNUM', 'required' => 'no'), 
 				'cvv2_code' => array('name' => 'CVV2', 'required' => 'yes'), 
 				'email' => array('name' => 'EMAIL', 'required' => 'no'), 
 				'phone_number' => array('name' => 'PHONENUM', 'required' => 'no'), 
@@ -377,7 +383,7 @@ class phpPayPal {
 				'email' => array('name' => 'EMAIL', 'required' => 'no'), 
 				'description' => array('name' => 'DESC', 'required' => 'no'), 
 				'custom' => array('name' => 'CUSTOM', 'required' => 'no'), 
-				'invoice' => array('name' => 'INVNUM', 'required' => 'no'), 
+				'invoice_number' => array('name' => 'INVNUM', 'required' => 'no'), 
 				'phone_number' => array('name' => 'PHONENUM', 'required' => 'no'), 
 				'shipping_name' => array('name' => 'SHIPTONAME', 'required' => 'no'), 
 				'shipping_address1' => array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
@@ -410,7 +416,7 @@ class phpPayPal {
 				'amount_total' => array('name' => 'AMT', 'required' => 'yes'), 
 				'description' => array('name' => 'DESC', 'required' => 'no'), 
 				'custom' => array('name' => 'CUSTOM', 'required' => 'no'), 
-				'invoice' => array('name' => 'INVNUM', 'required' => 'no'), 
+				'invoice_number' => array('name' => 'INVNUM', 'required' => 'no'), 
 				'notify_url' => array('name' => 'NOTIFYURL', 'required' => 'no'), 
 				'amount_items' => array('name' => 'ITEMAMT', 'required' => 'no'), 
 				'amount_shipping' => array('name' => 'SHIPPINGAMT', 'required' => 'no'), 
@@ -593,7 +599,7 @@ class phpPayPal {
 				'payment_pending_reason' => 'PENDINGREASON',
 				'payment_reason_code' => 'REASONCODE',
 				'amount_sales_tax' => 'SALESTAX',
-				'invoice' => 'INVNUM',
+				'invoice_number' => 'INVNUM',
 				'note' => 'NOTE',
 				'custom' => 'CUSTOM',
 				'subscription_id' => 'SUBSCRIPTIONID',
