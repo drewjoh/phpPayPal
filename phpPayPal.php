@@ -1803,12 +1803,10 @@ class phpPayPal {
 			$this->last_name			= urlencode($this->last_name);
 			$this->credit_card_type		= urlencode($this->credit_card_type);
 			$this->credit_card_number	= urlencode($this->credit_card_number);
-			$this->expire_date_month	= urlencode($this->expire_date_month);
 			
 			// Month must be padded with leading zero
-			$this->expire_date_month	= urlencode(str_pad($this->expire_date_month, 2, '0', STR_PAD_LEFT));
+			$this->expire_date			= urlencode(str_pad($this->expire_date, 6, '0', STR_PAD_LEFT));
 			
-			$this->expire_date_year	= urlencode($this->expire_date_year);
 			$this->cvv2_code		= urlencode($this->cvv2_code);
 			$this->address1			= urlencode($this->address1);
 			$this->address2			= urlencode($this->address2);
@@ -1871,12 +1869,10 @@ class phpPayPal {
 			$this->last_name			= urldecode($this->last_name);
 			$this->credit_card_type		= urldecode($this->credit_card_type);
 			$this->credit_card_number	= urldecode($this->credit_card_number);
-			$this->expire_date_month	= urldecode($this->expire_date_month);
 			
 			// Month must be padded with leading zero
-			$this->expire_date_month	= urldecode(str_pad($this->expire_date_month, 2, '0', STR_PAD_LEFT));
+			$this->expire_date			= urldecode(str_pad($this->expire_date, 6, '0', STR_PAD_LEFT));
 			
-			$this->expire_date_year	= urldecode($this->expire_date_year);
 			$this->cvv2_code		= urldecode($this->cvv2_code);
 			$this->address1			= urldecode($this->address1);
 			$this->address2			= urldecode($this->address2);
