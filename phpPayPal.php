@@ -308,6 +308,33 @@ class phpPayPal {
 	
 	
 	public $RequestFieldsArray = array(
+		'DoCapture' => array(
+				'method' => array('name' =>'METHOD', 'required' => 'yes'),
+				'authorization_id' => array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
+				'amount' => array('name' =>'AMT', 'required' => 'yes'),
+				'currency_code' => array('name' =>'CURRENCYCODE', 'required' => 'no'),
+				'complete_type' => array('name' =>'COMPLETETYPE', 'required' => 'yes'),
+				'invoice_number' => array('name' =>'INVNUM', 'required' => 'no'),
+				'note' => array('name' =>'NOTE', 'required' => 'no'),
+				'soft_descriptor' => array('name' =>'SOFTDESCRIPTOR', 'required' => 'no')
+				),
+		'DoAuthorization' => array(
+				'method' => array('name' =>'METHOD', 'required' => 'yes'),
+				'transaction_id' => array('name' =>'TRANSACTIONID', 'required' => 'yes'),
+				'amount' => array('name' =>'AMT', 'required' => 'yes'),
+				'transaction_entity' => array('name' =>'TRANSACTIONENTITY', 'required' => 'no'),
+				'currency_code' => array('name' =>'CURRENCYCODE', 'required' => 'no')
+				),
+		'DoReauthorization' => array(
+				'method' => array('name' =>'METHOD', 'required' => 'yes'),
+				'authorization_id' => array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
+				'amount' => array('name' =>'AMT', 'required' => 'yes')
+				),
+		'DoVoid' => array(
+				'method' => array('name' =>'METHOD', 'required' => 'yes'),
+				'authorization_id' => array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
+				'note' => array('name' =>'NOTE', 'required' => 'no')
+				),
 		'DoDirectPayment' => array(
 				'payment_type' => array('name' => 'PAYMENTACTION', 'required' => 'yes'),
 				'ip_address' => array('name' => 'IPADDRESS', 'required' => 'yes'),
@@ -343,8 +370,7 @@ class phpPayPal {
 				'shipping_postal_code' => array('name' => 'SHIPTOZIP', 'required' => 'no'), 
 				'shipping_country_code' => array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
 				'shipping_phone_number' => array('name' => 'SHIPTOPHONENUM', 'required' => 'no')
-				)
-		,		
+				),		
 		'SetExpressCheckout' => array(
 				'RETURN_URL' => array('name' => 'RETURNURL', 'required' => 'yes'),
 				'CANCEL_URL' => array('name' => 'CANCELURL', 'required' => 'yes'),
@@ -377,12 +403,10 @@ class phpPayPal {
 				'payflow_color' => array('name' => 'PAYFLOWCOLOR', 'required' => 'no'), 
 				'channel_type' => array('name' => 'CHANNELTYPE', 'required' => 'no'), 
 				'solution_type' => array('name' => 'SOLUTIONTYPE', 'required' => 'no') 
-				)
-		,		
+				),		
 		'GetExpressCheckoutDetails' => array(
 				'token' => array('name' => 'TOKEN', 'required' => 'yes')
-				)
-		,		
+				),		
 		'DoExpressCheckoutPayment' => array(
 				'token' => array('name' => 'TOKEN', 'required' => 'yes'),
 				'payment_type' => array('name' => 'PAYMENTACTION', 'required' => 'yes'), 
@@ -405,12 +429,10 @@ class phpPayPal {
 				'shipping_postal_code' => array('name' => 'SHIPTOZIP', 'required' => 'no'), 
 				'shipping_country_code' => array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
 				'shipping_phone_number' => array('name' => 'SHIPTOPHONENUM', 'required' => 'no')
-				)
-		,		
+				),		
 		'GetTransactionDetails' => array(
 				'transaction_id' => array('name' => 'TRANSACTIONID', 'required' => 'yes')
-				)
-		,		
+				),		
 		'RefundTransaction' => array(
 				'transaction_id' => array('name' => 'TRANSACTIONID', 'required' => 'yes'), 
 				'refund_type' => array('name' => 'REFUNDTYPE', 'required' => 'yes'), 
@@ -421,6 +443,37 @@ class phpPayPal {
 	
 	
 	public $ResponseFieldsArray = array(
+		'DoCapture' => array(
+				'authorization_id' => 'AUTHORIZATIONID',
+				'email' => 'EMAIL',
+				'payer_id' => 'PAYERID',
+				'payer_status' => 'PAYERSTATUS',
+				'country_code' => 'COUNTRYCODE',
+				'business' => 'BUSINESS',
+				'address_status' => 'ADDRESSSTATUS',
+				'ship_to_name' => 'SHIPTONAME',
+				'ship_to_address1' => 'SHIPTOSTREET',
+				'ship_to_address2' => 'SHIPTOSTREET2',
+				'ship_to_city' => 'SHIPTOCITY',
+				'ship_to_state' => 'SHIPTOSTATE',
+				'ship_to_zip' => 'SHIPTOZIP',
+				'ship_to_country_code' => 'SHIPTOCOUNTRYCODE',
+				'salutation' => 'SALUTATION',
+				'first_name' => 'FIRSTNAME',
+				'middle_name' => 'MIDDLENAME',
+				'last_name' => 'LASTNAME',
+				'suffix' => 'SUFFIX'
+				),
+		'DoAuthorization' => array(
+				'transaction_id' => 'TRANSACTIONID',
+				'amount' => 'AMT'
+				),
+		'DoReauthorization' => array(
+				'authorization_id' => 'AUTHORIZATIONID'
+				),
+		'DoVoid' => array(
+				'authorization_id' => 'AUTHORIZATIONID'
+				),
 		'DoDirectPayment' => array(
 				'timestamp' => 'TIMESTAMP',
 				'correlation_id' => 'CORRELATIONID',
