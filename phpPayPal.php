@@ -134,6 +134,8 @@ class phpPayPal {
 	
 	public $authorization_id; // AUTHORIZATIONID
 	public $complete_type; // COMPLETETYPE
+	public $soft_descriptor; // SOFTDESCRIPTOR
+	public $transaction_entity; // TRANSACTIONENTITY
 	
 	
 	 // Variables found (usually) to be returned to us
@@ -453,13 +455,13 @@ class phpPayPal {
 				'country_code' => 'COUNTRYCODE',
 				'business' => 'BUSINESS',
 				'address_status' => 'ADDRESSSTATUS',
-				'ship_to_name' => 'SHIPTONAME',
-				'ship_to_address1' => 'SHIPTOSTREET',
-				'ship_to_address2' => 'SHIPTOSTREET2',
-				'ship_to_city' => 'SHIPTOCITY',
-				'ship_to_state' => 'SHIPTOSTATE',
-				'ship_to_zip' => 'SHIPTOZIP',
-				'ship_to_country_code' => 'SHIPTOCOUNTRYCODE',
+				'shipping_name' => 'SHIPTONAME',
+				'shipping_address1' => 'SHIPTOSTREET',
+				'shipping_address2' => 'SHIPTOSTREET2',
+				'shipping_city' => 'SHIPTOCITY',
+				'shipping_state' => 'SHIPTOSTATE',
+				'shipping_postal_code' => 'SHIPTOZIP',
+				'shipping_country_code' => 'SHIPTOCOUNTRYCODE',
 				'salutation' => 'SALUTATION',
 				'first_name' => 'FIRSTNAME',
 				'middle_name' => 'MIDDLENAME',
