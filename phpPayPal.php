@@ -130,7 +130,7 @@ class phpPayPal {
 	public $channel_type; // CHANNELTYPE
 	public $solution_type; // SOLUTIONTYPE
 	
-	public $return_fmf_details; // RETURNFMFDETAILS
+	public $return_fmf_details = 0; // RETURNFMFDETAILS - 0 by default
 	
 	 // Variables found in Authorize and Capture
 	
@@ -379,8 +379,8 @@ class phpPayPal {
 				'shipping_phone_number' => array('name' => 'SHIPTOPHONENUM', 'required' => 'no')
 				),		
 		'SetExpressCheckout' => array(
-				'RETURN_URL' => array('name' => 'RETURNURL', 'required' => 'yes'),
-				'CANCEL_URL' => array('name' => 'CANCELURL', 'required' => 'yes'),
+				'return_url' => array('name' => 'RETURNURL', 'required' => 'yes'),
+				'cancel_url' => array('name' => 'CANCELURL', 'required' => 'yes'),
 				'amount_total' => array('name' => 'AMT', 'required' => 'yes'), 
 				'currency_code' => array('name' => 'CURRENCYCODE', 'required' => 'no'), 
 				'amount_max' => array('name' => 'MAXAMT', 'required' => 'no'), 
@@ -723,8 +723,8 @@ class phpPayPal {
 	   The cancelURL is the location buyers are sent to when they hit the
 	   cancel button during authorization of payment during the PayPal flow
 	   */
-	private $RETURN_URL = '';
-	private $CANCEL_URL = '';
+	public $return_url = '';
+	public $cancel_url = '';
 	
 	/**
 	# Version: this is the API version in the request.
