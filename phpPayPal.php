@@ -309,7 +309,6 @@ class phpPayPal {
 	
 	public $RequestFieldsArray = array(
 		'DoCapture' => array(
-				'method' => array('name' =>'METHOD', 'required' => 'yes'),
 				'authorization_id' => array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
 				'amount' => array('name' =>'AMT', 'required' => 'yes'),
 				'currency_code' => array('name' =>'CURRENCYCODE', 'required' => 'no'),
@@ -319,19 +318,16 @@ class phpPayPal {
 				'soft_descriptor' => array('name' =>'SOFTDESCRIPTOR', 'required' => 'no')
 				),
 		'DoAuthorization' => array(
-				'method' => array('name' =>'METHOD', 'required' => 'yes'),
 				'transaction_id' => array('name' =>'TRANSACTIONID', 'required' => 'yes'),
 				'amount' => array('name' =>'AMT', 'required' => 'yes'),
 				'transaction_entity' => array('name' =>'TRANSACTIONENTITY', 'required' => 'no'),
 				'currency_code' => array('name' =>'CURRENCYCODE', 'required' => 'no')
 				),
 		'DoReauthorization' => array(
-				'method' => array('name' =>'METHOD', 'required' => 'yes'),
 				'authorization_id' => array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
 				'amount' => array('name' =>'AMT', 'required' => 'yes')
 				),
 		'DoVoid' => array(
-				'method' => array('name' =>'METHOD', 'required' => 'yes'),
 				'authorization_id' => array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
 				'note' => array('name' =>'NOTE', 'required' => 'no')
 				),
