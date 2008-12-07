@@ -742,6 +742,317 @@ class phpPayPal {
 	
 	
 	
+	public function DoCapture()
+		{
+		// urlencode the needed variables
+		$this->urlencodeVariables();
+		
+		/* Construct the request string that will be sent to PayPal.
+		   The variable $nvpstr contains all the variables and is a
+		   name value pair string with & as a delimiter */
+		$nvpstr = $this->generateNVPString('DoCapture');
+		
+		// decode the variables incase we still require access to them in our program
+		$this->urldecodeVariables();
+		
+		/* Make the API call to PayPal, using API signature.
+		   The API response is stored in an associative array called $this->Response */
+		$this->Response = $this->hash_call("DoCapture", $nvpstr);
+		
+		// TODO: Add error handling for the hash_call
+		
+		/* Display the API response back to the browser.
+		   If the response from PayPal was a success, display the response parameters'
+		   If the response was an error, display the errors received using APIError.php.
+		   */
+		
+		/*
+			*************
+			if NO SUCCESS
+			*************
+			*/
+		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
+			{
+			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+			$this->Error['ACK']				= $this->Response['ACK'];
+			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+			$this->Error['VERSION']			= @$this->Response['VERSION'];
+			$this->Error['BUILD']			= @$this->Response['BUILD'];
+			
+			// TODO: Error codes for AVSCODE and CVV@MATCH
+			
+			$this->_error				= true;
+			$this->_error_ack			= $this->Response['ACK'];
+			$this->ack					= 'Failure';
+			$this->_error_type			= 'paypal';
+			$this->_error_date			= $this->Response['TIMESTAMP'];
+			$this->_error_code			= $this->Response['L_ERRORCODE0'];
+			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+			$this->_error_version		= @$this->Response['VERSION'];
+			$this->_error_build			= @$this->Response['BUILD']; 
+			
+			return false;
+			}
+			/*
+			*************
+			if SUCCESS
+			*************
+			*/
+		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
+			{
+			/*
+			Take the response variables and put them into the local class variables
+			*/
+			foreach($this->ResponseFieldsArray['DoCapture'] as $key => $value)
+				$this->$key = $this->Response[$value];
+			
+			return true;
+			}
+		}
+	
+	
+	
+	
+	
+	public function DoAuthorization()
+		{
+		// urlencode the needed variables
+		$this->urlencodeVariables();
+		
+		/* Construct the request string that will be sent to PayPal.
+		   The variable $nvpstr contains all the variables and is a
+		   name value pair string with & as a delimiter */
+		$nvpstr = $this->generateNVPString('DoAuthorization');
+		
+		// decode the variables incase we still require access to them in our program
+		$this->urldecodeVariables();
+		
+		/* Make the API call to PayPal, using API signature.
+		   The API response is stored in an associative array called $this->Response */
+		$this->Response = $this->hash_call("DoAuthorization", $nvpstr);
+		
+		// TODO: Add error handling for the hash_call
+		
+		/* Display the API response back to the browser.
+		   If the response from PayPal was a success, display the response parameters'
+		   If the response was an error, display the errors received using APIError.php.
+		   */
+		
+		/*
+			*************
+			if NO SUCCESS
+			*************
+			*/
+		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
+			{
+			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+			$this->Error['ACK']				= $this->Response['ACK'];
+			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+			$this->Error['VERSION']			= @$this->Response['VERSION'];
+			$this->Error['BUILD']			= @$this->Response['BUILD'];
+			
+			// TODO: Error codes for AVSCODE and CVV@MATCH
+			
+			$this->_error				= true;
+			$this->_error_ack			= $this->Response['ACK'];
+			$this->ack					= 'Failure';
+			$this->_error_type			= 'paypal';
+			$this->_error_date			= $this->Response['TIMESTAMP'];
+			$this->_error_code			= $this->Response['L_ERRORCODE0'];
+			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+			$this->_error_version		= @$this->Response['VERSION'];
+			$this->_error_build			= @$this->Response['BUILD']; 
+			
+			return false;
+			}
+			/*
+			*************
+			if SUCCESS
+			*************
+			*/
+		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
+			{
+			/*
+			Take the response variables and put them into the local class variables
+			*/
+			foreach($this->ResponseFieldsArray['DoAuthorization'] as $key => $value)
+				$this->$key = $this->Response[$value];
+			
+			return true;
+			}
+		}
+
+
+
+
+
+	public function DoReauthorization()
+		{
+		// urlencode the needed variables
+		$this->urlencodeVariables();
+		
+		/* Construct the request string that will be sent to PayPal.
+		   The variable $nvpstr contains all the variables and is a
+		   name value pair string with & as a delimiter */
+		$nvpstr = $this->generateNVPString('DoReauthorization');
+		
+		// decode the variables incase we still require access to them in our program
+		$this->urldecodeVariables();
+		
+		/* Make the API call to PayPal, using API signature.
+		   The API response is stored in an associative array called $this->Response */
+		$this->Response = $this->hash_call("DoReauthorization", $nvpstr);
+		
+		// TODO: Add error handling for the hash_call
+		
+		/* Display the API response back to the browser.
+		   If the response from PayPal was a success, display the response parameters'
+		   If the response was an error, display the errors received using APIError.php.
+		   */
+		
+		/*
+			*************
+			if NO SUCCESS
+			*************
+			*/
+		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
+			{
+			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+			$this->Error['ACK']				= $this->Response['ACK'];
+			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+			$this->Error['VERSION']			= @$this->Response['VERSION'];
+			$this->Error['BUILD']			= @$this->Response['BUILD'];
+			
+			// TODO: Error codes for AVSCODE and CVV@MATCH
+			
+			$this->_error				= true;
+			$this->_error_ack			= $this->Response['ACK'];
+			$this->ack					= 'Failure';
+			$this->_error_type			= 'paypal';
+			$this->_error_date			= $this->Response['TIMESTAMP'];
+			$this->_error_code			= $this->Response['L_ERRORCODE0'];
+			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+			$this->_error_version		= @$this->Response['VERSION'];
+			$this->_error_build			= @$this->Response['BUILD']; 
+			
+			return false;
+			}
+			/*
+			*************
+			if SUCCESS
+			*************
+			*/
+		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
+			{
+			/*
+			Take the response variables and put them into the local class variables
+			*/
+			foreach($this->ResponseFieldsArray['DoReauthorization'] as $key => $value)
+				$this->$key = $this->Response[$value];
+			
+			return true;
+			}
+		}
+
+
+
+
+
+	public function DoVoid()
+		{
+		// urlencode the needed variables
+		$this->urlencodeVariables();
+		
+		/* Construct the request string that will be sent to PayPal.
+		   The variable $nvpstr contains all the variables and is a
+		   name value pair string with & as a delimiter */
+		$nvpstr = $this->generateNVPString('DoVoid');
+		
+		// decode the variables incase we still require access to them in our program
+		$this->urldecodeVariables();
+		
+		/* Make the API call to PayPal, using API signature.
+		   The API response is stored in an associative array called $this->Response */
+		$this->Response = $this->hash_call("DoVoid", $nvpstr);
+		
+		// TODO: Add error handling for the hash_call
+		
+		/* Display the API response back to the browser.
+		   If the response from PayPal was a success, display the response parameters'
+		   If the response was an error, display the errors received using APIError.php.
+		   */
+		
+		/*
+			*************
+			if NO SUCCESS
+			*************
+			*/
+		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
+			{
+			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+			$this->Error['ACK']				= $this->Response['ACK'];
+			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+			$this->Error['VERSION']			= @$this->Response['VERSION'];
+			$this->Error['BUILD']			= @$this->Response['BUILD'];
+			
+			// TODO: Error codes for AVSCODE and CVV@MATCH
+			
+			$this->_error				= true;
+			$this->_error_ack			= $this->Response['ACK'];
+			$this->ack					= 'Failure';
+			$this->_error_type			= 'paypal';
+			$this->_error_date			= $this->Response['TIMESTAMP'];
+			$this->_error_code			= $this->Response['L_ERRORCODE0'];
+			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+			$this->_error_version		= @$this->Response['VERSION'];
+			$this->_error_build			= @$this->Response['BUILD']; 
+			
+			return false;
+			}
+			/*
+			*************
+			if SUCCESS
+			*************
+			*/
+		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
+			{
+			/*
+			Take the response variables and put them into the local class variables
+			*/
+			foreach($this->ResponseFieldsArray['DoVoid'] as $key => $value)
+				$this->$key = $this->Response[$value];
+			
+			return true;
+			}
+		}
+
+	
+	
+	
 	
 	
 	public function DoDirectPayment()
@@ -759,6 +1070,7 @@ class phpPayPal {
 			{
 			// Counter for the total of all the items put together
 			$total_items_amount = 0;
+			$total_items_tax_amount = 0;
 			// Go through the items array
 			foreach($this->ItemsArray as $key => $value)
 				{
@@ -772,10 +1084,15 @@ class phpPayPal {
 							"&L_AMT".$key."=".$current_item['amount'];
 				// Add this item's amount to the total current count
 				$total_items_amount += ($current_item['amount'] * $current_item['quantity']);
+				$total_items_tax_amount += ($current_item['amount_tax'] * $current_item['quantity']);
 				}
 			// Set the amount_items for this instance and ITEMAMT added to the request string
 			$this->amount_items = $total_items_amount;
+			// Add this to our NVP string
 			$nvpstr .= "&ITEMAMT=".urlencode($total_items_amount);
+			// If our entire tax amount is not set, we will automatically set it based on the items tax amount
+			if($this->amount_tax == 0 OR empty($this->amount_tax))
+				$nvpstr .= "&TAXAMT=".urlencode($total_items_tax_amount);
 			}
 		
 		// decode the variables incase we still require access to them in our program
@@ -1443,9 +1760,9 @@ class phpPayPal {
 						}
 					else
 						break;
-					}
-				}
-			}
+					} // end while
+				} // end if
+			} // end function
 		
 		
 		
@@ -1474,12 +1791,12 @@ class phpPayPal {
 			// Decode all specified variables
 			$this->payment_type			= urlencode($this->payment_type);
 			
-			$this->email		= urlencode($this->email);
+			$this->email				= urlencode($this->email);
 			$this->first_name			= urlencode($this->first_name);
 			$this->last_name			= urlencode($this->last_name);
 			$this->credit_card_type		= urlencode($this->credit_card_type);
 			$this->credit_card_number	= urlencode($this->credit_card_number);
-			$this->expire_date_month		= urlencode($this->expire_date_month);
+			$this->expire_date_month	= urlencode($this->expire_date_month);
 			
 			// Month must be padded with leading zero
 			$this->expire_date_month	= urlencode(str_pad($this->expire_date_month, 2, '0', STR_PAD_LEFT));
@@ -1503,7 +1820,7 @@ class phpPayPal {
 			$this->shipping_state			= urlencode($this->shipping_state);
 			$this->shipping_postal_code		= urlencode($this->shipping_postal_code);
 			$this->shipping_country_code	= urlencode($this->shipping_country_code);
-			$this->shipping_phone_number			= urlencode($this->shipping_phone_number);
+			$this->shipping_phone_number	= urlencode($this->shipping_phone_number);
 			
 			$this->amount_total		= urlencode($this->amount_total);
 			$this->amount_shipping	= urlencode($this->amount_shipping);
@@ -1542,12 +1859,12 @@ class phpPayPal {
 			// Decode all specified variables
 			$this->payment_type			= urldecode($this->payment_type);
 			
-			$this->email		= urldecode($this->email);
+			$this->email				= urldecode($this->email);
 			$this->first_name			= urldecode($this->first_name);
 			$this->last_name			= urldecode($this->last_name);
 			$this->credit_card_type		= urldecode($this->credit_card_type);
 			$this->credit_card_number	= urldecode($this->credit_card_number);
-			$this->expire_date_month		= urldecode($this->expire_date_month);
+			$this->expire_date_month	= urldecode($this->expire_date_month);
 			
 			// Month must be padded with leading zero
 			$this->expire_date_month	= urldecode(str_pad($this->expire_date_month, 2, '0', STR_PAD_LEFT));
@@ -1571,7 +1888,7 @@ class phpPayPal {
 			$this->shipping_state				= urldecode($this->shipping_state);
 			$this->shipping_postal_code			= urldecode($this->shipping_postal_code);
 			$this->shipping_country_code		= urldecode($this->shipping_country_code);
-			$this->shipping_phone_number	= urldecode($this->shipping_phone_number);
+			$this->shipping_phone_number		= urldecode($this->shipping_phone_number);
 			
 			$this->amount_total		= urldecode($this->amount_total);
 			$this->amount_shipping	= urldecode($this->amount_shipping);
