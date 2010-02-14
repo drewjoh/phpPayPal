@@ -906,7 +906,7 @@ class phpPayPal {
 	
 	
 	
-	public function DoCapture()
+	public function do_capture()
 	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
@@ -977,7 +977,7 @@ class phpPayPal {
 	
 	
 	
-	public function DoAuthorization()
+	public function do_authorization()
 	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
@@ -1048,7 +1048,7 @@ class phpPayPal {
 
 
 
-	public function DoReauthorization()
+	public function do_reauthorization()
 	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
@@ -1119,7 +1119,7 @@ class phpPayPal {
 
 
 
-	public function DoVoid()
+	public function do_void()
 	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
@@ -1191,7 +1191,7 @@ class phpPayPal {
 	
 	
 	
-	public function DoDirectPayment()
+	public function do_direct_payment()
 	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
@@ -1292,7 +1292,7 @@ class phpPayPal {
 	
 	
 	
-	function SetExpressCheckout()
+	function set_express_checkout()
 	{
 		// TODO: Add error handling prior to trying to make PayPal calls. ie: missing amount_total or RETURN_URL
 		
@@ -1370,7 +1370,7 @@ class phpPayPal {
 		}
 	}
 	
-	function SetExpressCheckoutSuccessfulRedirect()
+	function set_express_checkout_successful_redirect()
 	{
 		// Redirect to paypal.com here
 		$token = urlencode($this->Response["TOKEN"]);
@@ -1381,7 +1381,7 @@ class phpPayPal {
 	
 	
 	
-	function GetExpressCheckoutDetails()
+	function get_express_checkout_details()
 	{
 		// TODO: Add error handling prior to PayPal calls. ie: missing TOKEN
 		
@@ -1461,7 +1461,7 @@ class phpPayPal {
 	
 	
 	
-	function DoExpressCheckoutPayment()
+	function do_express_checkout_payment()
 	{
 		// TODO: Error checking. ie: we require a token and payer_id here
 		
@@ -1557,7 +1557,7 @@ class phpPayPal {
 	
 	
 	
-	function GetTransactionDetails()
+	function get_transaction_details()
 	{
 		/* Construct the parameter string that describes the PayPal payment
 			the varialbes were set in the web form, and the resulting string
@@ -1624,7 +1624,7 @@ class phpPayPal {
 	
 	
 	
-	function RefundTransaction()
+	function refund_transaction()
 	{
 		/* Construct the parameter string that describes the PayPal payment
 			the varialbes were set in the web form, and the resulting string
@@ -1690,7 +1690,7 @@ class phpPayPal {
 	
 	
 	
-	function CreateRecurringPaymentsProfile()
+	function create_recurring_payments_profile()
 	{
 
 		$this->urlencodeVariables();
@@ -1743,7 +1743,7 @@ class phpPayPal {
 	
 	
 	
-	function GetRecurringPaymentsProfileDetails()
+	function get_recurring_payments_profile_details()
 	{
 
 		$nvpstr = $this->generateNVPString('GetRecurringPaymentsProfileDetails');
@@ -1792,7 +1792,7 @@ class phpPayPal {
 	
 	
 	
-	function UpdateRecurringPaymentsProfile()
+	function update_recurring_payments_profile()
 	{
 		$this->urlencodeVariables();
 
