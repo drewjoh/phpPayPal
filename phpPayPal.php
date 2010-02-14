@@ -1,7 +1,9 @@
 <?php
 
 /*
-	Created by Drew Johnston, 2007-2008 
+	Created by Drew Johnston, 2007, drewjoh.com
+	
+	Please give credit where credit is due. :)
 	
 	Licensed under the Apache License, Version 2.0 (the "License"); 
 	you may not use this file except in compliance with the License. 
@@ -15,32 +17,95 @@
 	See the License for the specific language governing permissions and 
 	limitations under the License.
 	
-	Please give credit where credit is due. :)
+	Get, Create and Updte Recurring Payment Profiles available thanks to Bill Joslin (billjoslin.com)!
 */
 
 /*
-	phpPayPal Version 0.5.2
+	--------------------------------
+		phpPayPal Version 0.7
+	--------------------------------
 */
 
 
 
 class phpPayPal { 
 	
-	// Public VARIABLES
+	// ---------------------------
+	// PRIVATE VARIABLES
+	// ---------------------------
+	// NOTE: LIVE and SANDBOX variables are included.  Sandbox is enabled by default.
 	
+	/******************************************************************************
+		PayPal includes the following API Signature for making API
+		calls to the PayPal sandbox:
+		
+		API Username 	sdk-three_api1.sdk.com
+		API Password 	QFZCWN5HZM8VBG7Q
+		API Signature 	A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU
+	*******************************************************************************/
+	
+	private $sandbox	= TRUE;
+	private $live		= FALSE;
+	
+	// SANDBOX SETTINGS
+	if($sandbox):
+		
+		private $API_USERNAME = 'sdk-three_api1.sdk.com';
+		private $API_PASSWORD = 'QFZCWN5HZM8VBG7Q';
+		private $API_SIGNATURE = 'A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU';
+		
+		private $API_ENDPOINT = 'https://api-3t.sandbox.paypal.com/nvp';
+		
+		private $USE_PROXY = FALSE;
+		private $PROXY_HOST = '127.0.0.1';
+		private $PROXY_PORT = '808';
+		
+		private $PAYPAL_URL = 'https://www.sandbox.paypal.com/webscr&cmd=_express-checkout&token=';
+		
+		public $return_url = '';
+		public $cancel_url = '';
+	
+	// LIVE SETTINGS
+	elseif($live):
+		
+		private $API_USERNAME = '';
+		private $API_PASSWORD = '';
+		private $API_SIGNATURE = '';
+		
+		private $API_ENDPOINT = 'https://api-3t.paypal.com/nvp';
+		
+		private $USE_PROXY = FALSE;
+		private $PROXY_HOST = '127.0.0.1';
+		private $PROXY_PORT = '808';
+		
+		private $PAYPAL_URL = 'https://www.paypal.com/webscr&cmd=_express-checkout&token=';
+		
+		public $return_url = '';
+		public $cancel_url = '';
+		
+		private $VERSION = '3.0';
+		
+	endif;
+	
+	
+	
+	
+	// ----------------------------
+	// PUBLIC VARIABLES
+	// ----------------------------
 	
 	// Array of the response variables from PayPal requests
 	public $Response;
 	
-	// Error Variables
-	/*	
-		$Error = an array of PayPal's response to any paypal errors
-		All $_error's = are filled for any error that occurs, including PayPal errors
-		Typically, if a method returns false, the $_error's should be filled with error information
+	/* 	-------------------
+		ERROR VARIABLES
+		-------------------
+		- $Error = an array of PayPal's response to any paypal errors
+		- All $_error's = are filled for any error that occurs, including PayPal errors
+		- If a method returns false, the $_error's should be filled with error information
 	*/
 	
-	// Array of the error response from PayPal
-	//  - [TIMESTAMP] [CORRELATIONID] [ACK] [L_ERRORCODE0] [L_SHORTMESSAGE0] [L_LONGMESSAGE0] [L_SEVERITYCODE0] [VERSION] [BUILD]
+	// Array of the error response from PayPal - [TIMESTAMP] [CORRELATIONID] [ACK] [L_ERRORCODE0] [L_SHORTMESSAGE0] [L_LONGMESSAGE0] [L_SEVERITYCODE0] [VERSION] [BUILD]
 	public $Error; 
 	
 	public $_error = false;
@@ -56,11 +121,11 @@ class phpPayPal {
 	public $_error_build; 
 	public $_error_display_message;
 	
-	/*
-	typical values found in a Request
-	Format is  $our_variable_name; // PAYPALS_VARIABLE_NAME
-	
-	This could probably be organized a bit better
+	/*	----------------------
+		REQUEST VARIABLES
+		----------------------
+		- All values found in a Request
+		- Format is  $our_variable_name; // PAYPALS_VARIABLE_NAME
 	*/
 	
 	public $payment_type = 'Sale'; // PAYMENTTYPE
@@ -101,6 +166,9 @@ class phpPayPal {
 	public $amount_refund_fee; // FEEREFUNDAMT
 	public $amount_refund_total; // GROSSREFUNDAMT
 	
+	public $billing_type;
+	public $billing_agreement;
+	
 	public $shipping_name; // SHIPTONAME
 	public $shipping_address1; // SHIPTOSTREET
 	public $shipping_address2; // SHIPTOSTREET2
@@ -129,6 +197,7 @@ class phpPayPal {
 	public $payflow_color; // PAYFLOWCOLOR
 	public $channel_type; // CHANNELTYPE
 	public $solution_type; // SOLUTIONTYPE
+	public $user_action; // USERACTION
 	
 	public $return_fmf_details = 0; // RETURNFMFDETAILS - 0 by default
 	
@@ -140,7 +209,7 @@ class phpPayPal {
 	public $transaction_entity; // TRANSACTIONENTITY
 	
 	
-	 // Variables found (usually) to be returned to us
+	 // Variables that are returned to us
 	
 	public $ack;
 	public $token; // TOKEN
@@ -196,27 +265,33 @@ class phpPayPal {
 	public $correlation_id;
 	
 	/*
-		This is the Items array, contains KEY => VALUE pairs
-		for NAME => VALUE of items where NAME = name of item variable
+		This is the Items array, contains KEY => VALUE pairs for NAME => VALUE of items where NAME = name of item variable
 		Names include: name, number, quantity, amount_tax, amount_total
 	*/
 	public $ItemsArray;
 	
 	
-	/*
-		This is an array of country names and their country codes
-		Organized in CODE => NAME format
-		This is purely for informational purposes, the class itself 
-		doesn't use these.
+	/*	-----------------------
+		COUNTRY NAMES & CODES
+		-----------------------
+		- This is an array of country names and their country codes
+		- Organized in CODE => NAME format ($countries[COUNTRY_CODE] = COUNTRY_NAME)
+		- This is purely for informational purposes, the class itself doesn't use these.  
+		- PayPal does use the country CODES when sending address information; can come in very handy then.
+		- List should include all countries that PayPal accepts payments from.
 	*/
 	
-	
-	// $countries[COUNTRY_CODE] = COUNTRY_NAME
 	public $countries = array ("US"=>"United States","AL"=>"Albania","DZ"=>"Algeria","AS"=>"American Samoa","AD"=>"Andorra","AI"=>"Anguilla","AG"=>"Antigua and Barbuda","AR"=>"Argentina","AM"=>"Armenia","AW"=>"Aruba","AU"=>"Australia","AT"=>"Austria","AZ"=>"Azerbaijan Republic","BS"=>"Bahamas","BH"=>"Bahrain","BD"=>"Bangladesh","BB"=>"Barbados","BY"=>"Belarus","BE"=>"Belgium","BZ"=>"Belize","BJ"=>"Benin","BM"=>"Bermuda","BO"=>"Bolivia","BA"=>"Bosnia and Herzegovina","BW"=>"Botswana","BR"=>"Brazil","VG"=>"British Virgin Islands","BN"=>"Brunei","BG"=>"Bulgaria","BF"=>"Burkina Faso","KH"=>"Cambodia","CM"=>"Cameroon","CA"=>"Canada","CV"=>"Cape Verde","KY"=>"Cayman Islands","CL"=>"Chile","C2"=>"China","CO"=>"Colombia","CK"=>"Cook Islands","CR"=>"Costa Rica","CI"=>"Cote D'Ivoire","HR"=>"Croatia","CY"=>"Cyprus","CZ"=>"Czech Republic","DK"=>"Denmark","DJ"=>"Djibouti","DM"=>"Dominica","DO"=>"Dominican Republic","TP"=>"East Timor","EC"=>"Ecuador","EG"=>"Egypt","SV"=>"El Salvador","EE"=>"Estonia","FM"=>"Federated States of Micronesia","FJ"=>"Fiji","FI"=>"Finland","FR"=>"France","GF"=>"French Guiana","PF"=>"French Polynesia","GA"=>"Gabon Republic","GE"=>"Georgia","DE"=>"Germany","GH"=>"Ghana","GI"=>"Gibraltar","GR"=>"Greece","GD"=>"Grenada","GP"=>"Guadeloupe","GU"=>"Guam","GT"=>"Guatemala","GN"=>"Guinea","GY"=>"Guyana","HT"=>"Haiti","HN"=>"Honduras","HK"=>"Hong Kong","HU"=>"Hungary","IS"=>"Iceland","IN"=>"India","ID"=>"Indonesia","IE"=>"Ireland","IL"=>"Israel","IT"=>"Italy","JM"=>"Jamaica","JP"=>"Japan","JO"=>"Jordan","KZ"=>"Kazakhstan","KE"=>"Kenya","KW"=>"Kuwait","LA"=>"Laos","LV"=>"Latvia","LB"=>"Lebanon","LS"=>"Lesotho","LT"=>"Lithuania","LU"=>"Luxembourg","MO"=>"Macau","MK"=>"Macedonia","MG"=>"Madagascar","MY"=>"Malaysia","MV"=>"Maldives","ML"=>"Mali","MT"=>"Malta","MH"=>"Marshall Islands","MQ"=>"Martinique","MU"=>"Mauritius","MX"=>"Mexico","MD"=>"Moldova","MN"=>"Mongolia","MS"=>"Montserrat","MA"=>"Morocco","MZ"=>"Mozambique","NA"=>"Namibia","NP"=>"Nepal","NL"=>"Netherlands","AN"=>"Netherlands Antilles","NZ"=>"New Zealand","NI"=>"Nicaragua","MP"=>"Northern Mariana Islands","NO"=>"Norway","OM"=>"Oman","PK"=>"Pakistan","PW"=>"Palau","PS"=>"Palestine","PA"=>"Panama","PG"=>"Papua New Guinea","PY"=>"Paraguay","PE"=>"Peru","PH"=>"Philippines","PL"=>"Poland","PT"=>"Portugal","PR"=>"Puerto Rico","QA"=>"Qatar","RO"=>"Romania","RU"=>"Russia","RW"=>"Rwanda","VC"=>"Saint Vincent and the Grenadines","WS"=>"Samoa","SA"=>"Saudi Arabia","SN"=>"Senegal","CS"=>"Serbia and Montenegro","SC"=>"Seychelles","SG"=>"Singapore","SK"=>"Slovakia","SI"=>"Slovenia","SB"=>"Solomon Islands","ZA"=>"South Africa","KR"=>"South Korea","ES"=>"Spain","LK"=>"Sri Lanka","KN"=>"St. Kitts and Nevis","LC"=>"St. Lucia","SZ"=>"Swaziland","SE"=>"Sweden","CH"=>"Switzerland","TW"=>"Taiwan","TZ"=>"Tanzania","TH"=>"Thailand","TG"=>"Togo","TO"=>"Tonga","TT"=>"Trinidad and Tobago","TN"=>"Tunisia","TR"=>"Turkey","TM"=>"Turkmenistan","TC"=>"Turks and Caicos Islands","UG"=>"Uganda","UA"=>"Ukraine","AE"=>"United Arab Emirates","GB"=>"United Kingdom","UY"=>"Uruguay","UZ"=>"Uzbekistan","VU"=>"Vanuatu","VE"=>"Venezuela","VN"=>"Vietnam","VI"=>"Virgin Islands (USA)","YE"=>"Yemen","ZM"=>"Zambia");
 	
 	
-	// States for certain countries, many of these are required formats for PayPal (learned that the hard way)
-	//	$states[COUNTRY_CODE][STATE_CODE] = STATE_NAME
+	/*	--------------------
+		STATES
+		--------------------
+		- States for certain countries, many of these are required formats for PayPal
+		- Multidimensional array
+		- $states[COUNTRY_CODE][STATE_CODE] = STATE_NAME
+	*/
+	
 	public $states = array(
 		'US' => array ("AK"=>"AK","AL"=>"AL","AR"=>"AR","AZ"=>"AZ","CA"=>"CA","CO"=>"CO","CT"=>"CT","DC"=>"DC","DE"=>"DE","FL"=>"FL","GA"=>"GA","HI"=>"HI",
 					"IA"=>"IA","ID"=>"ID","IL"=>"IL","IN"=>"IN","KS"=>"KS","KY"=>"KY","LA"=>"LA","MA"=>"MA","MD"=>"MD","ME"=>"ME","MI"=>"MI","MN"=>"MN",
@@ -270,14 +345,19 @@ class phpPayPal {
 					"Vizcaya" => "Vizcaya", "Zamora" => "Zamora", "Zaragoza" => "Zaragoza")
 				);
 	
-
-	
-	// Internal Use
 	
 	
-	// AVS Response Code Values and Meanings
-	//	$AvsResponseCodesArray[CODE][MESSAGE]
-	//	$AvsResponseCodesArray[CODE][DETAILS]
+	// ----------------------------
+	// Internal Use Varibles
+	// ----------------------------
+	
+	
+	/*	-----------------------------------------
+		AVS Response Code Values and Meanings
+		-----------------------------------------
+		- $AvsResponseCodesArray[CODE][MESSAGE]
+		- $AvsResponseCodesArray[CODE][DETAILS]
+	*/
 	public $AvsResponseCodesArray = array (
 			'A' => array('message' => 'Address', 'details' => 'Address Only (no ZIP)'),
 			'B' => array('message' => 'International "A"', 'details' => 'Address Only (no ZIP)'),
@@ -298,10 +378,13 @@ class phpPayPal {
 			'Z' => array('message' => 'ZIP', 'details' => 'Five-digit ZIP code (no Address)'),
 			'' => array('message' => 'Error', 'details' => 'Not Applicable')
 		);
-			
-	// CVV Rsponse Code Values and Meanings
-	//	$CvvResponseCodesArray[CODE][MESSAGE]
-	//	$CvvResponseCodesArray[CODE][DETAILS]
+	
+	/*	---------------------------------------	
+		CVV Rsponse Code Values and Meanings
+		---------------------------------------
+		- $CvvResponseCodesArray[CODE][MESSAGE]
+		- $CvvResponseCodesArray[CODE][DETAILS]
+	*/
 	public $CvvResponseCodesArray = array (
 			'M' => array('message' => 'Match', 'details' => 'CVV2'), 
 			'N' => array('message' => 'No Match', 'details' => 'None'), 
@@ -311,446 +394,520 @@ class phpPayPal {
 			'X' => array('message' => 'No response', 'details' => 'Not Applicable')
 		);
 	
-	// CVV Rsponse Code Values and Meanings for Switch and Solo cards
-	// TODO: ??
+	/*	---------------------------------------
+		CVV Rsponse Code Values and Meanings for Switch and Solo cards
+		---------------------------------------
+		- TODO: ??
+	*/
 			
 	
 	
+	/*	--------------------------------------------
+		REQUEST FIELDS ARRAYS
+		--------------------------------------------
+	*/
 	
 	public $RequestFieldsArray = array(
 		'DoCapture' => array(
-				'authorization_id' => array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
-				'amount' => array('name' =>'AMT', 'required' => 'yes'),
-				'currency_code' => array('name' =>'CURRENCYCODE', 'required' => 'no'),
-				'complete_type' => array('name' =>'COMPLETETYPE', 'required' => 'yes'),
-				'invoice_number' => array('name' =>'INVNUM', 'required' => 'no'),
-				'note' => array('name' =>'NOTE', 'required' => 'no'),
-				'soft_descriptor' => array('name' =>'SOFTDESCRIPTOR', 'required' => 'no')
+				'authorization_id' 			=> array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
+				'amount' 					=> array('name' =>'AMT', 'required' => 'yes'),
+				'currency_code' 			=> array('name' =>'CURRENCYCODE', 'required' => 'no'),
+				'complete_type' 			=> array('name' =>'COMPLETETYPE', 'required' => 'yes'),
+				'invoice_number' 			=> array('name' =>'INVNUM', 'required' => 'no'),
+				'note' 						=> array('name' =>'NOTE', 'required' => 'no'),
+				'soft_descriptor' 			=> array('name' =>'SOFTDESCRIPTOR', 'required' => 'no')
 				),
 		'DoAuthorization' => array(
-				'transaction_id' => array('name' =>'TRANSACTIONID', 'required' => 'yes'),
-				'amount' => array('name' =>'AMT', 'required' => 'yes'),
-				'transaction_entity' => array('name' =>'TRANSACTIONENTITY', 'required' => 'no'),
-				'currency_code' => array('name' =>'CURRENCYCODE', 'required' => 'no')
+				'transaction_id' 			=> array('name' =>'TRANSACTIONID', 'required' => 'yes'),
+				'amount' 					=> array('name' =>'AMT', 'required' => 'yes'),
+				'transaction_entity' 		=> array('name' =>'TRANSACTIONENTITY', 'required' => 'no'),
+				'currency_code' 			=> array('name' =>'CURRENCYCODE', 'required' => 'no')
 				),
 		'DoReauthorization' => array(
-				'authorization_id' => array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
-				'amount' => array('name' =>'AMT', 'required' => 'yes')
+				'authorization_id' 			=> array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
+				'amount'					=> array('name' =>'AMT', 'required' => 'yes')
 				),
 		'DoVoid' => array(
-				'authorization_id' => array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
-				'note' => array('name' =>'NOTE', 'required' => 'no')
+				'authorization_id' 			=> array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
+				'note' 						=> array('name' =>'NOTE', 'required' => 'no')
 				),
 		'DoDirectPayment' => array(
-				'payment_type' => array('name' => 'PAYMENTACTION', 'required' => 'yes'),
-				'ip_address' => array('name' => 'IPADDRESS', 'required' => 'yes'),
-				'return_fmf_details' => array('name' => 'RETURNFMFDETAILS', 'required' => 'no'),
-				'amount_total' => array('name' => 'AMT', 'required' => 'yes'), 
-				'credit_card_type' => array('name' => 'CREDITCARDTYPE', 'required' => 'yes'), 
-				'credit_card_number' => array('name' => 'ACCT', 'required' => 'yes'), 
-				'expire_date' => array('name' => 'EXPDATE', 'required' => 'yes'), 
-				'first_name' => array('name' => 'FIRSTNAME', 'required' => 'yes'), 
-				'last_name' => array('name' => 'LASTNAME', 'required' => 'yes'), 
-				'address1' => array('name' => 'STREET', 'required' => 'no'), 
-				'address2' => array('name' => 'STREET2', 'required' => 'no'), 
-				'city' => array('name' => 'CITY', 'required' => 'no'), 
-				'state' => array('name' => 'STATE', 'required' => 'no'), 
-				'country_code' => array('name' => 'COUNTRYCODE', 'required' => 'no'), 
-				'postal_code' => array('name' => 'ZIP', 'required' => 'no'), 
-				'notify_url' => array('name' => 'NOTIFYURL', 'required' => 'no'), 
-				'currency_code' => array('name' => 'CURRENCYCODE', 'required' => 'no'), 
-				'amount_items' => array('name' => 'ITEMAMT', 'required' => 'no'), 
-				'amount_shipping' => array('name' => 'SHIPPINGAMT', 'required' => 'no'), 
-				'amount_handling' => array('name' => 'HANDLINGAMT', 'required' => 'no'), 
-				'amount_tax' => array('name' => 'TAXAMT', 'required' => 'no'), 
-				'description' => array('name' => 'DESC', 'required' => 'no'), 
-				'custom' => array('name' => 'CUSTOM', 'required' => 'no'), 
-				'invoice_number' => array('name' => 'INVNUM', 'required' => 'no'), 
-				'cvv2_code' => array('name' => 'CVV2', 'required' => 'yes'), 
-				'email' => array('name' => 'EMAIL', 'required' => 'no'), 
-				'phone_number' => array('name' => 'PHONENUM', 'required' => 'no'), 
-				'shipping_name' => array('name' => 'SHIPTONAME', 'required' => 'no'), 
-				'shipping_address1' => array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
-				'shipping_address2' => array('name' => 'SHIPTOSTREET2', 'required' => 'no'), 
-				'shipping_city' => array('name' => 'SHIPTOCITY', 'required' => 'no'), 
-				'shipping_state' => array('name' => 'SHIPTOSTATE', 'required' => 'no'), 
-				'shipping_postal_code' => array('name' => 'SHIPTOZIP', 'required' => 'no'), 
-				'shipping_country_code' => array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
-				'shipping_phone_number' => array('name' => 'SHIPTOPHONENUM', 'required' => 'no')
+				'payment_type' 				=> array('name' => 'PAYMENTACTION', 'required' => 'yes'),
+				'ip_address' 				=> array('name' => 'IPADDRESS', 'required' => 'yes'),
+				'return_fmf_details' 		=> array('name' => 'RETURNFMFDETAILS', 'required' => 'no'),
+				'amount_total' 				=> array('name' => 'AMT', 'required' => 'yes'), 
+				'credit_card_type' 			=> array('name' => 'CREDITCARDTYPE', 'required' => 'yes'), 
+				'credit_card_number'		=> array('name' => 'ACCT', 'required' => 'yes'), 
+				'expire_date' 				=> array('name' => 'EXPDATE', 'required' => 'yes'), 
+				'first_name' 				=> array('name' => 'FIRSTNAME', 'required' => 'yes'), 
+				'last_name' 				=> array('name' => 'LASTNAME', 'required' => 'yes'), 
+				'address1' 					=> array('name' => 'STREET', 'required' => 'no'), 
+				'address2' 					=> array('name' => 'STREET2', 'required' => 'no'), 
+				'city' 						=> array('name' => 'CITY', 'required' => 'no'), 
+				'state' 					=> array('name' => 'STATE', 'required' => 'no'), 
+				'country_code' 				=> array('name' => 'COUNTRYCODE', 'required' => 'no'), 
+				'postal_code' 				=> array('name' => 'ZIP', 'required' => 'no'), 
+				'notify_url' 				=> array('name' => 'NOTIFYURL', 'required' => 'no'), 
+				'currency_code' 			=> array('name' => 'CURRENCYCODE', 'required' => 'no'), 
+				'amount_items' 				=> array('name' => 'ITEMAMT', 'required' => 'no'), 
+				'amount_shipping' 			=> array('name' => 'SHIPPINGAMT', 'required' => 'no'), 
+				'amount_handling' 			=> array('name' => 'HANDLINGAMT', 'required' => 'no'), 
+				'amount_tax' 				=> array('name' => 'TAXAMT', 'required' => 'no'), 
+				'description' 				=> array('name' => 'DESC', 'required' => 'no'), 
+				'custom' 					=> array('name' => 'CUSTOM', 'required' => 'no'), 
+				'invoice_number' 			=> array('name' => 'INVNUM', 'required' => 'no'), 
+				'cvv2_code' 				=> array('name' => 'CVV2', 'required' => 'yes'), 
+				'email' 					=> array('name' => 'EMAIL', 'required' => 'no'), 
+				'phone_number' 				=> array('name' => 'PHONENUM', 'required' => 'no'), 
+				'shipping_name' 			=> array('name' => 'SHIPTONAME', 'required' => 'no'), 
+				'shipping_address1' 		=> array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
+				'shipping_address2' 		=> array('name' => 'SHIPTOSTREET2', 'required' => 'no'), 
+				'shipping_city' 			=> array('name' => 'SHIPTOCITY', 'required' => 'no'), 
+				'shipping_state' 			=> array('name' => 'SHIPTOSTATE', 'required' => 'no'), 
+				'shipping_postal_code' 		=> array('name' => 'SHIPTOZIP', 'required' => 'no'), 
+				'shipping_country_code'		=> array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
+				'shipping_phone_number' 	=> array('name' => 'SHIPTOPHONENUM', 'required' => 'no')
 				),		
 		'SetExpressCheckout' => array(
-				'return_url' => array('name' => 'RETURNURL', 'required' => 'yes'),
-				'cancel_url' => array('name' => 'CANCELURL', 'required' => 'yes'),
-				'amount_total' => array('name' => 'AMT', 'required' => 'yes'), 
-				'currency_code' => array('name' => 'CURRENCYCODE', 'required' => 'no'), 
-				'amount_max' => array('name' => 'MAXAMT', 'required' => 'no'), 
-				'payment_type' => array('name' => 'PAYMENTACTION', 'required' => 'no'), 
-				'email' => array('name' => 'EMAIL', 'required' => 'no'), 
-				'description' => array('name' => 'DESC', 'required' => 'no'), 
-				'custom' => array('name' => 'CUSTOM', 'required' => 'no'), 
-				'invoice_number' => array('name' => 'INVNUM', 'required' => 'no'), 
-				'phone_number' => array('name' => 'PHONENUM', 'required' => 'no'), 
-				'shipping_name' => array('name' => 'SHIPTONAME', 'required' => 'no'), 
-				'shipping_address1' => array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
-				'shipping_address2' => array('name' => 'SHIPTOSTREET2', 'required' => 'no'), 
-				'shipping_city' => array('name' => 'SHIPTOCITY', 'required' => 'no'), 
-				'shipping_state' => array('name' => 'SHIPTOSTATE', 'required' => 'no'), 
-				'shipping_postal_code' => array('name' => 'SHIPTOZIP', 'required' => 'no'), 
-				'shipping_country_code' => array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
-				'shipping_phone_number' => array('name' => 'SHIPTOPHONENUM', 'required' => 'no'), 
+				'return_url' 				=> array('name' => 'RETURNURL', 'required' => 'yes'),
+				'cancel_url' 				=> array('name' => 'CANCELURL', 'required' => 'yes'),
+				'amount_total' 				=> array('name' => 'AMT', 'required' => 'yes'), 
+				'currency_code' 			=> array('name' => 'CURRENCYCODE', 'required' => 'no'), 
+				'amount_max' 				=> array('name' => 'MAXAMT', 'required' => 'no'), 
+				'payment_type' 				=> array('name' => 'PAYMENTACTION', 'required' => 'no'), 
+				'email'						=> array('name' => 'EMAIL', 'required' => 'no'), 
+				'description' 				=> array('name' => 'DESC', 'required' => 'no'), 
+				'custom' 					=> array('name' => 'CUSTOM', 'required' => 'no'), 
+				'invoice_number' 			=> array('name' => 'INVNUM', 'required' => 'no'), 
+				'phone_number' 				=> array('name' => 'PHONENUM', 'required' => 'no'), 
+				'shipping_name' 			=> array('name' => 'SHIPTONAME', 'required' => 'no'), 
+				'shipping_address1' 		=> array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
+				'shipping_address2' 		=> array('name' => 'SHIPTOSTREET2', 'required' => 'no'), 
+				'shipping_city' 			=> array('name' => 'SHIPTOCITY', 'required' => 'no'), 
+				'shipping_state' 			=> array('name' => 'SHIPTOSTATE', 'required' => 'no'), 
+				'shipping_postal_code' 		=> array('name' => 'SHIPTOZIP', 'required' => 'no'), 
+				'shipping_country_code' 	=> array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
+				'shipping_phone_number' 	=> array('name' => 'SHIPTOPHONENUM', 'required' => 'no'), 
 				'require_confirmed_shipping_address' => array('name' => 'REQCONFIRMSHIPPING', 'required' => 'no'),
-				'no_shipping' => array('name' => 'NOSHIPPING', 'required' => 'no'), 
-				'address_override' => array('name' => 'ADDROVERRIDE', 'required' => 'no'), 
-				'token' => array('name' => 'TOKEN', 'required' => 'no'), 
-				'locale_code' => array('name' => 'LOCALECODE', 'required' => 'no'), 
-				'page_style' => array('name' => 'PAGESTYLE', 'required' => 'no'), 
-				'hdr_img' => array('name' => 'HDRIMG', 'required' => 'no'), 
-				'hdr_border_color' => array('name' => 'HDRBORDERCOLOR', 'required' => 'no'), 
-				'hdr_background_color' => array('name' => 'HDRBACKCOLOR', 'required' => 'no'), 
-				'payflow_color' => array('name' => 'PAYFLOWCOLOR', 'required' => 'no'), 
-				'channel_type' => array('name' => 'CHANNELTYPE', 'required' => 'no'), 
-				'solution_type' => array('name' => 'SOLUTIONTYPE', 'required' => 'no') 
+				'no_shipping' 				=> array('name' => 'NOSHIPPING', 'required' => 'no'), 
+				'address_override' 			=> array('name' => 'ADDROVERRIDE', 'required' => 'no'), 
+				'token' 					=> array('name' => 'TOKEN', 'required' => 'no'), 
+				'locale_code' 				=> array('name' => 'LOCALECODE', 'required' => 'no'), 
+				'page_style' 				=> array('name' => 'PAGESTYLE', 'required' => 'no'), 
+				'hdr_img' 					=> array('name' => 'HDRIMG', 'required' => 'no'), 
+				'hdr_border_color' 			=> array('name' => 'HDRBORDERCOLOR', 'required' => 'no'), 
+				'hdr_background_color' 		=> array('name' => 'HDRBACKCOLOR', 'required' => 'no'), 
+				'payflow_color' 			=> array('name' => 'PAYFLOWCOLOR', 'required' => 'no'), 
+				'user_action' 				=> array('name' => 'USERACTION', 'required' => 'no'),
+				'channel_type' 				=> array('name' => 'CHANNELTYPE', 'required' => 'no'),
+				'solution_type' 			=> array('name' => 'SOLUTIONTYPE', 'required' => 'no') ,
+				'billing_type' 				=> array('name' => 'L_BILLINGTYPE0', 'required' => 'no'),
+				'billing_agreement' 		=> array('name' => 'L_BILLINGAGREEMENTDESCRIPTION0', 'required' => 'no') 
 				),		
 		'GetExpressCheckoutDetails' => array(
-				'token' => array('name' => 'TOKEN', 'required' => 'yes')
+				'token' 					=> array('name' => 'TOKEN', 'required' => 'yes')
 				),		
 		'DoExpressCheckoutPayment' => array(
-				'token' => array('name' => 'TOKEN', 'required' => 'yes'),
-				'payment_type' => array('name' => 'PAYMENTACTION', 'required' => 'yes'), 
-				'payer_id' => array('name' => 'PAYERID', 'required' => 'yes'),
-				'amount_total' => array('name' => 'AMT', 'required' => 'yes'), 
-				'description' => array('name' => 'DESC', 'required' => 'no'), 
-				'custom' => array('name' => 'CUSTOM', 'required' => 'no'), 
-				'invoice_number' => array('name' => 'INVNUM', 'required' => 'no'), 
-				'notify_url' => array('name' => 'NOTIFYURL', 'required' => 'no'), 
-				'amount_items' => array('name' => 'ITEMAMT', 'required' => 'no'), 
-				'amount_shipping' => array('name' => 'SHIPPINGAMT', 'required' => 'no'), 
-				'amount_handling' => array('name' => 'HANDLINGAMT', 'required' => 'no'), 
-				'amount_tax' => array('name' => 'TAXAMT', 'required' => 'no'), 
-				'currency_code' => array('name' => 'CURRENCYCODE', 'required' => 'no'), 
-				'shipping_name' => array('name' => 'SHIPTONAME', 'required' => 'no'), 
-				'shipping_address1' => array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
-				'shipping_address2' => array('name' => 'SHIPTOSTREET2', 'required' => 'no'), 
-				'shipping_city' => array('name' => 'SHIPTOCITY', 'required' => 'no'), 
-				'shipping_state' => array('name' => 'SHIPTOSTATE', 'required' => 'no'), 
-				'shipping_postal_code' => array('name' => 'SHIPTOZIP', 'required' => 'no'), 
-				'shipping_country_code' => array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
-				'shipping_phone_number' => array('name' => 'SHIPTOPHONENUM', 'required' => 'no')
+				'token' 					=> array('name' => 'TOKEN', 'required' => 'yes'),
+				'payment_type' 				=> array('name' => 'PAYMENTACTION', 'required' => 'yes'), 
+				'payer_id' 					=> array('name' => 'PAYERID', 'required' => 'yes'),
+				'amount_total' 				=> array('name' => 'AMT', 'required' => 'yes'), 
+				'description' 				=> array('name' => 'DESC', 'required' => 'no'), 
+				'custom' 					=> array('name' => 'CUSTOM', 'required' => 'no'), 
+				'invoice_number' 			=> array('name' => 'INVNUM', 'required' => 'no'), 
+				'notify_url' 				=> array('name' => 'NOTIFYURL', 'required' => 'no'), 
+				'amount_items' 				=> array('name' => 'ITEMAMT', 'required' => 'no'), 
+				'amount_shipping' 			=> array('name' => 'SHIPPINGAMT', 'required' => 'no'), 
+				'amount_handling' 			=> array('name' => 'HANDLINGAMT', 'required' => 'no'), 
+				'amount_tax' 				=> array('name' => 'TAXAMT', 'required' => 'no'), 
+				'currency_code' 			=> array('name' => 'CURRENCYCODE', 'required' => 'no'), 
+				'shipping_name' 			=> array('name' => 'SHIPTONAME', 'required' => 'no'), 
+				'shipping_address1' 		=> array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
+				'shipping_address2' 		=> array('name' => 'SHIPTOSTREET2', 'required' => 'no'), 
+				'shipping_city' 			=> array('name' => 'SHIPTOCITY', 'required' => 'no'), 
+				'shipping_state' 			=> array('name' => 'SHIPTOSTATE', 'required' => 'no'), 
+				'shipping_postal_code' 		=> array('name' => 'SHIPTOZIP', 'required' => 'no'), 
+				'shipping_country_code' 	=> array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
+				'shipping_phone_number' 	=> array('name' => 'SHIPTOPHONENUM', 'required' => 'no')
 				),		
 		'GetTransactionDetails' => array(
-				'transaction_id' => array('name' => 'TRANSACTIONID', 'required' => 'yes')
+				'transaction_id' 			=> array('name' => 'TRANSACTIONID', 'required' => 'yes')
 				),		
 		'RefundTransaction' => array(
-				'transaction_id' => array('name' => 'TRANSACTIONID', 'required' => 'yes'), 
-				'refund_type' => array('name' => 'REFUNDTYPE', 'required' => 'yes'), 
-				'amount_total' => array('name' => 'AMT', 'required' => 'no'), 
-				'note' => array('name' => 'NOTE', 'required' => 'no'),
+				'transaction_id'			=> array('name' => 'TRANSACTIONID', 'required' => 'yes'), 
+				'refund_type'				=> array('name' => 'REFUNDTYPE', 'required' => 'yes'), 
+				'amount_total' 				=> array('name' => 'AMT', 'required' => 'no'), 
+				'note' 						=> array('name' => 'NOTE', 'required' => 'no'),
+				),
+		'CreateRecurringPaymentsProfile' => array(
+				'token' 					=> array('name' => 'TOKEN', 'required' => 'yes'),
+				'payer_id' 					=> array('name' => 'PAYERID', 'required' => 'yes'),
+				'email' 				 	=> array('name' => 'EMAIL', 'required' => 'yes'),
+				'country_code'    			=> array('name' => 'COUNTRYCODE', 'required' => 'no'),
+				'business'    				=> array('name' => 'BUSINESS', 'required' => 'no'),
+				'payer_status'				=> array('name' => 'PAYERSTATUS', 'required' => 'no'),
+				'subscriber_name' 			=> array('name' => 'SUBSCRIBERNAME', 'required' => 'yes'),
+				'CL_ID' 					=> array('name' => 'PROFILEREFERENCE', 'required' => 'yes'),
+				'credit_card_type'			=> array('name' => 'CREDITCARDTYPE', 'required' => 'yes'), 
+				'credit_card_number' 		=> array('name' => 'ACCT', 'required' => 'yes'), 
+				'expire_date' 				=> array('name' => 'EXPDATE', 'required' => 'yes'), 
+				'first_name' 				=> array('name' => 'FIRSTNAME', 'required' => 'yes'), 
+				'last_name' 				=> array('name' => 'LASTNAME', 'required' => 'yes'), 
+				'address1' 					=> array('name' => 'STREET', 'required' => 'no'), 
+				'address2' 					=> array('name' => 'STREET2', 'required' => 'no'), 
+				'city' 						=> array('name' => 'CITY', 'required' => 'no'), 
+				'state' 					=> array('name' => 'STATE', 'required' => 'no'), 
+				'country_code' 				=> array('name' => 'COUNTRYCODE', 'required' => 'no'), 
+				'postal_code' 				=> array('name' => 'ZIP', 'required' => 'no'),
+				
+				'shipping_name' 			=> array('name' => 'SHIPTONAME', 'required' => 'no'), 
+				'shipping_address1'			=> array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
+				'shipping_address2' 		=> array('name' => 'SHIPTOSTREET2', 'required' => 'no'), 
+				'shipping_city' 			=> array('name' => 'SHIPTOCITY', 'required' => 'no'), 
+				'shipping_state' 			=> array('name' => 'SHIPTOSTATE', 'required' => 'no'), 
+				'shipping_postal_code' 		=> array('name' => 'SHIPTOZIP', 'required' => 'no'), 
+				'shipping_country_code' 	=> array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
+				'shipping_phone_number' 	=> array('name' => 'SHIPTOPHONENUM', 'required' => 'no'),
+				 
+				'description' 				=> array('name' => 'DESC', 'required' => 'yes'), // You must match the billing agreement var in set Express checkout
+				'currency'					=> array('name' => 'CURRENCYCODE', 'required' => 'yes'),
+				'payment_type' 				=> array('name' => 'PAYMENTACTION', 'required' => 'yes'),
+				'billing_type' 				=> array('name' => 'L_BILLINGTYPE0', 'required' => 'yes'),
+				'billing_agreement' 		=> array('name' => 'L_BILLINGAGREEMENTDESCRIPTION0', 'required' => 'yes'),
+				'profile_start_date'		=> array('name' => 'PROFILESTARTDATE', 'required' => 'yes'),
+				'billing_period' 			=> array('name' => 'BILLINGPERIOD', 'required' => 'yes'), // Day Week Month SemiMonth Year
+				'billing_frequency' 		=> array('name' => 'BILLINGFREQUENCY', 'required' => 'yes'),
+				'billing_amount' 			=> array('name' => 'AMT', 'required' => 'yes'),
+				'tax_amount' 				=> array('name' => 'TAXAMT', 'required' => 'yes'),
+				'ship_amount' 				=> array('name' => 'SHIPPINGAMT', 'required' => 'yes'),
+				'inital_amount' 			=> array('name' => 'INITAMT', 'required' => 'no'),
+				'failed_inital_amount' 		=> array('name' => 'FAILEDINITAMTACTION', 'required' => 'no'),
+				'billing_total_cycles' 		=> array('name' => 'TOTALBILLINGCYCLES', 'required' => 'no'),
+				'trial_billing_period' 		=> array('name' => 'TRIALBILLINGPERIOD', 'required' => 'no'),
+				'trial_billing_frequency' 	=> array('name' => 'TRIALBILLINGFREQUENCY', 'required' => 'no'),
+				'trial_amount' 				=> array('name' => 'TRIALAMT', 'required' => 'no'),	
+				'trial_billing_cycle' 		=> array('name' => 'TRIALTOTALBILLINGCYCLES', 'required' => 'no'),				
+				'max_failed_attempts'  		=> array('name' => 'MAXFAILEDPAYMENTS', 'required' => 'no'),
+				'auto_bill_amt'  			=> array('name' => 'AUTOBILLOUTAMT', 'required' => 'no')
+				),
+		'UpdateRecurringPaymentsProfile' => array(
+				'method'					=> array('name' => 'METHOD', 				'required' => 'no'),
+				'profile_id'				=> array('name' => 'PROFILEID', 			'required' => 'yes'),
+				'note'						=> array('name' => 'NOTE', 					'required' => 'no'),
+				'description'				=> array('name' => 'DESC', 					'required' => 'no'),
+				'subscriber_name'			=> array('name' => 'SUBSCRIBERNAME', 		'required' => 'no'),
+				'profile_referernce'		=> array('name' => 'PROFILEREFERENCE', 		'required' => 'no'),
+				'additional_billing_cycles'	=> array('name' => 'ADDITIONALBILLINGCYCLES', 'required' => 'no'),
+				'amount'					=> array('name' => 'AMT', 					'required' => 'yes'),
+				'shipping_amount'			=> array('name' => 'SHIPPINGAMT', 			'required' => 'no'),
+				'tax_amount'				=> array('name' => 'TAXAMT', 				'required' => 'no'),
+				'outstanding_amount'		=> array('name' => 'OUTSTANDINGAMT', 		'required' => 'no'),
+				'auto_bill_out'				=> array('name' => 'AUTOBILLOUTAMT', 		'required' => 'no'),
+				'max_failed_payments'		=> array('name' => 'MAXFAILEDPAYMENTS', 	'required' => 'no'),
+				'profile_start_date'		=> array('name' => 'PROFILESTARTDATE' , 	'required' => 'no'),
+				'ship_to_name'				=> array('name' => 'SHIPTONAME', 			'required' => 'no'),
+				'ship_to_street'			=> array('name' => 'SHIPTOSTREET', 			'required' => 'no'),
+				'ship_to_street_2'			=> array('name' => 'SHIPTOSTREET2', 		'required' => 'no'),
+				'ship_to_city'				=> array('name' => 'SHIPTOCITY', 			'required' => 'no'),
+				'ship_to_province'			=> array('name' => 'SHIPTOSTATE', 			'required' => 'no'),
+				'ship_to_postal_code'		=> array('name' => 'SHIPTOZIP', 			'required' => 'no'),
+				'ship_to_country'			=> array('name' => 'SHIPTOCOUNTRY', 		'required' => 'no'),
+				'ship_to_phone_number'		=> array('name' => 'SHIPTOPHONENUM', 		'required' => 'no'),
+				'billing_period'			=> array('name' => 'BILLINGPERIOD', 		'required' => 'yes'),
+				'billing_frequency'			=> array('name' => 'BILLINGFREQUENCY', 		'required' => 'yes'),
+				'total_billing_cycles' 		=> array('name' => 'TOTALBILLINGCYCLES', 	'required' => 'no'),
+				'trial_billing_period'		=> array('name' => 'TRIALBILLINGPERIOD', 	'required' => 'no'),
+				'trial_billing_frequnecy'	=> array('name' => 'TRIALBILLINGFREQUENCY', 'required' => 'no'),
+				'trial_total_cycles'		=> array('name' => 'TRIALTOTALBILLINGCYCLES', 'required' => 'no'),
+				'trial_amount'				=> array('name' => 'TRIALAMT', 				'required' => 'no'),
+				'currencey'					=> array('name' => 'CURRENCYCODE', 			'required' => 'yes'),
+				'shipping_amount'			=> array('name' => 'SHIPPINGAMT', 			'required' => 'no'),
+				'tax_amount'				=> array('name' => 'TAXAMT', 				'required' => 'no'),
+				'credit_card_type'			=> array('name' => 'CREDITCARDTYPE', 		'required' => 'no'),
+				'credit_card_number'		=> array('name' => 'ACCT', 					'required' => 'no'),
+				'expiration_date'			=> array('name' => 'EXPDATE', 				'required' => 'no'),
+				'cvv2'						=> array('name' => 'CVV2', 					'required' => 'no'),
+				'start_date'				=> array('name' => 'STARTDATE', 			'required' => 'no'),
+				'email'						=> array('name' => 'EMAIL', 				'required' => 'no'),
+				'first_name'				=> array('name' => 'FIRSTNAME', 			'required' => 'no'),
+				'last_name'					=> array('name' => 'LASTNAME',		 		'required' => 'no'),
+				'street'					=> array('name' => 'STREET', 				'required' => 'yes'),
+				'street2'					=> array('name' => 'STREET2', 				'required' => 'no'),
+				'city'						=> array('name' => 'CITY', 					'required' => 'yes'),
+				'province'					=> array('name' => 'STATE', 				'required' => 'yes'),
+				'country_code'				=> array('name' => 'COUNTRYCODE', 			'required' => 'yes'),
+				'postal_code'				=> array('name' => 'ZIP', 					'required' => 'yes'),
+				'phone_number'				=> array('name' => 'PHONENUM',				'required' => 'no')
 				)
 		);
 	
 	
 	public $ResponseFieldsArray = array(
 		'DoCapture' => array(
-				'authorization_id' => 'AUTHORIZATIONID',
-				'email' => 'EMAIL',
-				'payer_id' => 'PAYERID',
-				'payer_status' => 'PAYERSTATUS',
-				'country_code' => 'COUNTRYCODE',
-				'business' => 'BUSINESS',
-				'address_status' => 'ADDRESSSTATUS',
-				'shipping_name' => 'SHIPTONAME',
-				'shipping_address1' => 'SHIPTOSTREET',
-				'shipping_address2' => 'SHIPTOSTREET2',
-				'shipping_city' => 'SHIPTOCITY',
-				'shipping_state' => 'SHIPTOSTATE',
-				'shipping_postal_code' => 'SHIPTOZIP',
+				'authorization_id' 		=> 'AUTHORIZATIONID',
+				'email' 				=> 'EMAIL',
+				'payer_id' 				=> 'PAYERID',
+				'payer_status' 			=> 'PAYERSTATUS',
+				'country_code' 			=> 'COUNTRYCODE',
+				'business' 				=> 'BUSINESS',
+				'address_status' 		=> 'ADDRESSSTATUS',
+				'shipping_name' 		=> 'SHIPTONAME',
+				'shipping_address1' 	=> 'SHIPTOSTREET',
+				'shipping_address2' 	=> 'SHIPTOSTREET2',
+				'shipping_city' 		=> 'SHIPTOCITY',
+				'shipping_state' 		=> 'SHIPTOSTATE',
+				'shipping_postal_code'	=> 'SHIPTOZIP',
 				'shipping_country_code' => 'SHIPTOCOUNTRYCODE',
-				'salutation' => 'SALUTATION',
-				'first_name' => 'FIRSTNAME',
-				'middle_name' => 'MIDDLENAME',
-				'last_name' => 'LASTNAME',
-				'suffix' => 'SUFFIX'
+				'salutation' 			=> 'SALUTATION',
+				'first_name' 			=> 'FIRSTNAME',
+				'middle_name' 			=> 'MIDDLENAME',
+				'last_name' 			=> 'LASTNAME',
+				'suffix' 				=> 'SUFFIX'
 				),
 		'DoAuthorization' => array(
-				'transaction_id' => 'TRANSACTIONID',
-				'amount' => 'AMT'
+				'transaction_id' 		=> 'TRANSACTIONID',
+				'amount' 				=> 'AMT'
 				),
 		'DoReauthorization' => array(
-				'authorization_id' => 'AUTHORIZATIONID'
+				'authorization_id' 		=> 'AUTHORIZATIONID'
 				),
 		'DoVoid' => array(
-				'authorization_id' => 'AUTHORIZATIONID'
+				'authorization_id' 		=> 'AUTHORIZATIONID'
 				),
 		'DoDirectPayment' => array(
-				'timestamp' => 'TIMESTAMP',
-				'correlation_id' => 'CORRELATIONID',
-				'ack' => 'ACK',
-				'version' => 'VERSION',
-				'build' => 'BUILD',
-				'avs_code' => 'AVSCODE',
-				'cvv2_match' => 'CVV2MATCH',
-				'transaction_id' => 'TRANSACTIONID',
-				'amount_total' => 'AMT',
-				'currency_code' => 'CURRENCYCODE'
+				'timestamp' 			=> 'TIMESTAMP',
+				'correlation_id' 		=> 'CORRELATIONID',
+				'ack' 					=> 'ACK',
+				'version' 				=> 'VERSION',
+				'build' 				=> 'BUILD',
+				'avs_code' 				=> 'AVSCODE',
+				'cvv2_match' 			=> 'CVV2MATCH',
+				'transaction_id' 		=> 'TRANSACTIONID',
+				'amount_total' 			=> 'AMT',
+				'currency_code'			=> 'CURRENCYCODE'
 				)
 		,
 		'SetExpressCheckout' => array(
-				'timestamp' => 'TIMESTAMP',
-				'correlation_id' => 'CORRELATIONID',
-				'ack' => 'ACK',
-				'version' => 'VERSION',
-				'build' => 'BUILD',
-				'token' => 'TOKEN'
+				'timestamp' 			=> 'TIMESTAMP',
+				'correlation_id' 		=> 'CORRELATIONID',
+				'ack' 					=> 'ACK',
+				'version' 				=> 'VERSION',
+				'build' 				=> 'BUILD',
+				'token' 				=> 'TOKEN'
 				)
 		,
 		'DoExpressCheckoutPayment' => array(
-				'timestamp' => 'TIMESTAMP',
-				'correlation_id' => 'CORRELATIONID',
-				'ack' => 'ACK',
-				'version' => 'VERSION',
-				'build' => 'BUILD',
-				'token' => 'TOKEN',
-				'transaction_id' => 'TRANSACTIONID',
-				'transaction_type' => 'TRANSACTIONTYPE',
-				'payment_type' => 'PAYMENTTYPE',
-				'order_time' => 'ORDERTIME',
-				'amount_total' => 'AMT',
-				'currency_code' => 'CURRENCYCODE',
-				'amount_fee' => 'FEEAMT',
-				'amount_settle' => 'SETTLEAMT',
-				'amount_tax' => 'TAXAMT',
-				'exchange_rate' => 'EXCHANGERATE',
-				'payment_status' => 'PAYMENTSTATUS',
-				'payment_pending_reason' => 'PENDINGREASON',
-				'payment_reason_code' => 'REASONCODE'
+				'timestamp' 			=> 'TIMESTAMP',
+				'correlation_id' 		=> 'CORRELATIONID',
+				'ack' 					=> 'ACK',
+				'version' 				=> 'VERSION',
+				'build' 				=> 'BUILD',
+				'token' 				=> 'TOKEN',
+				'transaction_id' 		=> 'TRANSACTIONID',
+				'transaction_type' 		=> 'TRANSACTIONTYPE',
+				'payment_type' 			=> 'PAYMENTTYPE',
+				'order_time' 			=> 'ORDERTIME',
+				'amount_total' 			=> 'AMT',
+				'currency_code' 		=> 'CURRENCYCODE',
+				'amount_fee' 			=> 'FEEAMT',
+				'amount_settle' 		=> 'SETTLEAMT',
+				'amount_tax' 			=> 'TAXAMT',
+				'exchange_rate'			=> 'EXCHANGERATE',
+				'payment_status' 		=> 'PAYMENTSTATUS',
+				'payment_pending_reason'=> 'PENDINGREASON',
+				'payment_reason_code' 	=> 'REASONCODE'
 				)
 		,
 		'GetExpressCheckoutDetails' => array(
-				'timestamp' => 'TIMESTAMP',
-				'correlation_id' => 'CORRELATIONID',
-				'ack' => 'ACK',
-				'version' => 'VERSION',
-				'build' => 'BUILD',
-				'token' => 'TOKEN',
-				'email' => 'EMAIL',
-				'payer_id' => 'PAYERID',
-				'payer_status' => 'PAYERSTATUS',
-				'salutation' => 'SALUTATION',
-				'first_name' => 'FIRSTNAME',
-				'middle_name' => 'MIDDLENAME',
-				'last_name' => 'LASTNAME',
-				'suffix' => 'SUFFIX',
-				'country_code' => 'COUNTRYCODE',
-				'business' => 'BUSINESS',
-				'shipping_name' => 'SHIPTONAME',
-				'shipping_address1' => 'SHIPTOSTREET',
-				'shipping_address2' => 'SHIPTOSTREET2',
-				'shipping_city' => 'SHIPTOCITY',
-				'shipping_state' => 'SHIPTOSTATE',
+				'timestamp' 			=> 'TIMESTAMP',
+				'correlation_id' 		=> 'CORRELATIONID',
+				'ack' 					=> 'ACK',
+				'version' 				=> 'VERSION',
+				'build' 				=> 'BUILD',
+				'token' 				=> 'TOKEN',
+				'email' 				=> 'EMAIL',
+				'payer_id' 				=> 'PAYERID',
+				'payer_status' 			=> 'PAYERSTATUS',
+				'salutation' 			=> 'SALUTATION',
+				'first_name' 			=> 'FIRSTNAME',
+				'middle_name' 			=> 'MIDDLENAME',
+				'last_name' 			=> 'LASTNAME',
+				'suffix' 				=> 'SUFFIX',
+				'country_code' 			=> 'COUNTRYCODE',
+				'business' 				=> 'BUSINESS',
+				'shipping_name' 		=> 'SHIPTONAME',
+				'shipping_address1' 	=> 'SHIPTOSTREET',
+				'shipping_address2' 	=> 'SHIPTOSTREET2',
+				'shipping_city' 		=> 'SHIPTOCITY',
+				'shipping_state' 		=> 'SHIPTOSTATE',
 				'shipping_country_code' => 'SHIPTOCOUNTRYCODE',
 				'shipping_country_name' => 'SHIPTOCOUNTRYNAME',
-				'shipping_postal_code' => 'SHIPTOZIP',
-				'address_id' => 'ADDRESSID', // Is this a returned variable? Some docs say yes, some no
-				'address_status' => 'ADDRESSSTATUS',
-				'description' => 'DESC',
-				'custom' => 'CUSTOM',
-				'phone_number' => 'PHONENUM'
+				'shipping_postal_code' 	=> 'SHIPTOZIP',
+				'address_id' 			=> 'ADDRESSID', // Is this a returned variable? Some docs say yes, some no
+				'address_status'		=> 'ADDRESSSTATUS',
+				'description' 			=> 'DESC',
+				'custom' 				=> 'CUSTOM',
+				'phone_number' 			=> 'PHONENUM'
 				)
 		,
 		'GetTransactionDetails' => array(
 				'timestamp' => 'TIMESTAMP',
-				'correlation_id' => 'CORRELATIONID',
-				'ack' => 'ACK',
-				'version' => 'VERSION',
-				'build' => 'BUILD',
-				'receiver_business' => 'RECEIVERBUSINESS',
-				'receiver_email' => 'RECEIVEREMAIL',
-				'receiver_id' => 'RECEIVERID',
-				'email' => 'EMAIL',
-				'payer_id' => 'PAYERID',
-				'payer_status' => 'PAYERSTATUS',
-				'salutation' => 'SALUTATION',
-				'first_name' => 'FIRSTNAME',
-				'last_name' => 'LASTNAME',
-				'middle_name' => 'MIDDLENAME',
-				'suffix' => 'SUFFIX',
-				'payer_business' => 'PAYERBUSINESS',
-				'country_code' => 'COUNTRYCODE',
-				'business' => 'BUSINESS',
-				'shipping_name' => 'SHIPTONAME',
-				'shipping_address1' => 'SHIPTOSTREET',
-				'shipping_address2' => 'SHIPTOSTREET2',
-				'shipping_city' => 'SHIPTOCITY',
-				'shipping_state' => 'SHIPTOSTATE',
+				'correlation_id' 		=> 'CORRELATIONID',
+				'ack'					=> 'ACK',
+				'version' 				=> 'VERSION',
+				'build' 				=> 'BUILD',
+				'receiver_business'		=> 'RECEIVERBUSINESS',
+				'receiver_email' 		=> 'RECEIVEREMAIL',
+				'receiver_id' 			=> 'RECEIVERID',
+				'email' 				=> 'EMAIL',
+				'payer_id' 				=> 'PAYERID',
+				'payer_status' 			=> 'PAYERSTATUS',
+				'salutation' 			=> 'SALUTATION',
+				'first_name' 			=> 'FIRSTNAME',
+				'last_name' 			=> 'LASTNAME',
+				'middle_name' 			=> 'MIDDLENAME',
+				'suffix' 				=> 'SUFFIX',
+				'payer_business' 		=> 'PAYERBUSINESS',
+				'country_code' 			=> 'COUNTRYCODE',
+				'business' 				=> 'BUSINESS',
+				'shipping_name' 		=> 'SHIPTONAME',
+				'shipping_address1' 	=> 'SHIPTOSTREET',
+				'shipping_address2' 	=> 'SHIPTOSTREET2',
+				'shipping_city' 		=> 'SHIPTOCITY',
+				'shipping_state' 		=> 'SHIPTOSTATE',
 				'shipping_country_code' => 'SHIPTOCOUNTRYCODE',
 				'shipping_country_name' => 'SHIPTOCOUNTRYNAME',
-				'shipping_postal_code' => 'SHIPTOZIP',
-				'address_id' => 'ADDRESSID', // Is this a returned variable? Some docs say yes, some no
-				'address_status' => 'ADDRESSSTATUS',
-				'address_owner' => 'ADDRESSOWNER',
+				'shipping_postal_code'	=> 'SHIPTOZIP',
+				'address_id' 			=> 'ADDRESSID', // Is this a returned variable? Some docs say yes, some no
+				'address_status' 		=> 'ADDRESSSTATUS',
+				'address_owner' 		=> 'ADDRESSOWNER',
 				'parent_transaction_id' => 'PARENTTRANSACTIONID',
-				'transaction_id' => 'TRANSACTIONID',
-				'receipt_id' => 'RECEIPTID',
-				'transaction_type' => 'TRANSACTIONTYPE',
-				'payment_type' => 'PAYMENTTYPE',
-				'order_time' => 'ORDERTIME',
-				'amount_total' => 'AMT',
-				'currency_code' => 'CURRENCYCODE',
-				'amount_fee' => 'FEEAMT',
-				'amount_settle' => 'SETTLEAMT',
-				'amount_tax' => 'TAXAMT',
-				'exchange_rate' => 'EXCHANGERATE',
-				'payment_status' => 'PAYMENTSTATUS',
+				'transaction_id' 		=> 'TRANSACTIONID',
+				'receipt_id' 			=> 'RECEIPTID',
+				'transaction_type' 		=> 'TRANSACTIONTYPE',
+				'payment_type' 			=> 'PAYMENTTYPE',
+				'order_time' 			=> 'ORDERTIME',
+				'amount_total' 			=> 'AMT',
+				'currency_code' 		=> 'CURRENCYCODE',
+				'amount_fee' 			=> 'FEEAMT',
+				'amount_settle' 		=> 'SETTLEAMT',
+				'amount_tax' 			=> 'TAXAMT',
+				'exchange_rate' 		=> 'EXCHANGERATE',
+				'payment_status' 		=> 'PAYMENTSTATUS',
 				'payment_pending_reason' => 'PENDINGREASON',
-				'payment_reason_code' => 'REASONCODE',
-				'amount_sales_tax' => 'SALESTAX',
-				'invoice_number' => 'INVNUM',
-				'note' => 'NOTE',
-				'custom' => 'CUSTOM',
-				'subscription_id' => 'SUBSCRIPTIONID',
-				'subscription_date' => 'SUBSCRIPTIONDATE',
-				'effective_date' => 'EFFECTIVEDATE',
-				'retry_time' => 'RETRYTIME',
-				'user_name' => 'USERNAME',
-				'recurrences' => 'RECURRENCES',
-				'reattempt' => 'REATTEMPT',
-				'recurring' => 'RECURRING',
-				'period' => 'PERIOD',
-				'buyer_id' => 'BUYERID',
-				'closing_date' => 'CLOSINGDATE',
-				'multiitem' => 'MULTIITEM'
+				'payment_reason_code' 	=> 'REASONCODE',
+				'amount_sales_tax' 		=> 'SALESTAX',
+				'invoice_number' 		=> 'INVNUM',
+				'note' 					=> 'NOTE',
+				'custom' 				=> 'CUSTOM',
+				'subscription_id' 		=> 'SUBSCRIPTIONID',
+				'subscription_date' 	=> 'SUBSCRIPTIONDATE',
+				'effective_date' 		=> 'EFFECTIVEDATE',
+				'retry_time' 			=> 'RETRYTIME',
+				'user_name' 			=> 'USERNAME',
+				'recurrences' 			=> 'RECURRENCES',
+				'reattempt' 			=> 'REATTEMPT',
+				'recurring' 			=> 'RECURRING',
+				'period' 				=> 'PERIOD',
+				'buyer_id' 				=> 'BUYERID',
+				'closing_date' 			=> 'CLOSINGDATE',
+				'multiitem' 			=> 'MULTIITEM'
 				)
 		,
 		'RefundTransaction' => array(
 				'refund_transaction_id' => 'REFUNDTRANSACTIONID',
-				'amount_refund_net' => 'NETFUNDAMT',
-				'amount_refund_fee' => 'FEEREFUNDAMT',
-				'amount_refund_total' => 'GROSSREFUNDAMT'
+				'amount_refund_net' 	=> 'NETFUNDAMT',
+				'amount_refund_fee' 	=> 'FEEREFUNDAMT',
+				'amount_refund_total' 	=> 'GROSSREFUNDAMT'
+				),
+		'CreateRecurringPaymentsProfile' => array(
+				'profile_id' 			=> 'PROFILEID',
+				'status'				=> 'STATUS'
+				),
+		'UpdateRecurringPaymentsProfile' => array(
+				'profile_id' 			=> 'PROFILEID',
+				),
+		'GetRecurringPaymentsProfileDetails' => array(
+				'profile_id' 			=> 'PROFILEID',
+				'status' 				=> 'STATUS',
+				'auto_bill_out' 		=> 'AUTOBILLOUTAMT',
+				'description' 			=> 'DESC',
+				'max_failed_payments' 	=> 'MAXFAILEDPAYMENTS',
+				'subcriber_name' 		=> 'SUBSCRIBERNAME',
+				'profile_start_date' 	=> 'PROFILESTARTDATE',
+				'nest_billing_date' 	=> 'NEXTBILLINGDATE',
+				'num_cycles_completed' 	=> 'NUMCYCLESCOMPLETED',
+				'num_cycles_remaining' 	=> 'NUMCYCLESREMAINING',
+				'outstanding_balance' 	=> 'OUTSTANDINGBALANCE',
+				'failed_billing_account'=> 'FAILEDPAYMENTCOUNT',
+				'trial_amount_paid' 	=> 'TRIALAMTPAID',
+				'regular_amount_paid' 	=> 'REGULARAMTPAID',
+				'aggregate_amount'		=> 'AGGREGATEAMT',
+				'aggregate_option_amount' => 'AGGREGATEOPTIONALAMT',
+				'final_payment_due_date' => 'FINALPAYMENTDUEDATE',
+				'time_stamp' 			=> 'TIMESTAMP',
+				'correlation_id' 		=> 'CORRELATIONID',
+				'ack' 					=> 'ACK',
+				'version' 				=> 'VERSION',
+				'build' 				=> 'BUILD',
+				'ship_to_street' 		=> 'SHIPTOSTREET',
+				'ship_to_street2' 		=> 'SHIPTOSTREET2',
+				'ship_to_city' 			=> 'SHIPTOCITY',
+				'ship_to_province' 		=> 'SHIPTOSTATE',
+				'ship_to_postalcode' 	=> 'SHIPTOZIP',
+				'ship_to_country_code' 	=> 'SHIPTOCOUNTRYCODE',
+				'ship_to_country' 		=> 'SHIPTOCOUNTRY',
+				'ship_to_country_name' 	=> 'SHIPTOCOUNTRYNAME',
+				'ship_address_owner' 	=> 'SHIPADDRESSOWNER',
+				'ship_address_status' 	=> 'SHIPADDRESSSTATUS',
+				'billing_period' 		=> 'BILLINGPERIOD',
+				'billing_frequency' 	=> 'BILLINGFREQUENCY',
+				'total_biling_cycles' 	=> 'TOTALBILLINGCYCLES',
+				'currency' 				=> 'CURRENCYCODE',
+				'amount' 				=> 'AMT',
+				'shipping_amount' 		=> 'SHIPPINGAMT',
+				'tax_amount' 			=> 'TAXAMT',
+				'regualar_billing_period' => 'REGULARBILLINGPERIOD',
+				'regular_billing_frequency' => 'REGULARBILLINGFREQUENCY',
+				'regular_billing_cycles' => 'REGULARTOTALBILLINGCYCLES',
+				'regular_currency' 		=> 'REGULARCURRENCYCODE',
+				'regular_amount' 		=> 'REGULARAMT',
+				'regular_shipping_amount' => 'REGULARSHIPPINGAMT',
+				'regular_tax_amount' 	=> 'REGULARTAXAMT',
+				'credit_card_num' 		=> 'ACCT',
+				'credit_card_type' 		=> 'CREDITCARDTYPE',
+				'expiration_date' 		=> 'EXPDATE',
+				'email' 				=> 'EMAIL',
+				'first_name' 			=> 'FIRSTNAME',
+				'last_name' 			=> 'LASTNAME',
+				'street' 				=> 'STREET',
+				'street2' 				=> 'STREET2',
+				'city' 					=> 'CITY',
+				'state' 				=> 'STATE',
+				'postal_code' 			=> 'ZIP',
+				'country_code' 			=> 'COUNTRYCODE',
+				'country' 				=> 'COUNTRY',
+				'address_owner' 		=> 'ADDRESSOWNER',
+				'address_status' 		=> 'ADDRESSSTATUS',
+				'payer_status' 			=> 'PAYERSTATUS'
 				)
 		);
 	
 	
 	
-				
-	// Private VARIABLES
-	
-	
-	/****************************************************
-	PayPal includes the following API Signature for making API
-	calls to the PayPal sandbox:
-	
-	API Username 	sdk-three_api1.sdk.com
-	API Password 	QFZCWN5HZM8VBG7Q
-	API Signature 	A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU
-	****************************************************/
-	
-	/**
-	# API user: The user that is identified as making the call. you can
-	# also use your own API username that you created on PayPal’s sandbox
-	# or the PayPal live site
-	*/
-	
-	//	LIVE
-	// private $API_USERNAME = '';
-	//	SANDBOX
-	private $API_USERNAME = 'sdk-three_api1.sdk.com';
-	
-	/**
-	# API_password: The password associated with the API user
-	# If you are using your own API username, enter the API password that
-	# was generated by PayPal below
-	# IMPORTANT - HAVING YOUR API PASSWORD INCLUDED IN THE MANNER IS NOT
-	# SECURE, AND ITS ONLY BEING SHOWN THIS WAY FOR TESTING PURPOSES
-	*/
-	
-	//	LIVE
-	// private $API_PASSWORD = '';
-	//	SANDBOX
-	private $API_PASSWORD = 'QFZCWN5HZM8VBG7Q';
-	
-	/**
-	# API_Signature:The Signature associated with the API user. which is generated by paypal.
-	*/
-	
-	//	LIVE
-	// private $API_SIGNATURE = '';
-	//	SANDBOX
-	private $API_SIGNATURE = 'A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU';
-	
-	/**
-	# Endpoint: this is the server URL which you have to connect for submitting your API request.
-	*/
-	
-	//	LIVE
-	// private $API_ENDPOINT = 'https://api-3t.paypal.com/nvp';
-	//	SANDBOX
-	private $API_ENDPOINT = 'https://api-3t.sandbox.paypal.com/nvp';
-	
-	/**
-	USE_PROXY: Set this variable to TRUE to route all the API requests through proxy.
-	like define('USE_PROXY',TRUE);
-	
-	We don't appear to be using this in phpPayPal
-	*/
-	private $USE_PROXY = FALSE;
-	/**
-	PROXY_HOST: Set the host name or the IP address of proxy server.
-	PROXY_PORT: Set proxy port.
-	
-	PROXY_HOST and PROXY_PORT will be read only if USE_PROXY is set to TRUE
-	*/
-	private $PROXY_HOST = '127.0.0.1';
-	private $PROXY_PORT = '808';
-	
-	/* Define the PayPal URL. This is the URL that the buyer is
-	   first sent to to authorize payment with their paypal account
-	   change the URL depending if you are testing on the sandbox
-	   or going to the live PayPal site
-	   For the sandbox, the URL is
-	   https://www.sandbox.paypal.com/webscr&cmd=_express-checkout&token=
-	   For the live site, the URL is
-	   https://www.paypal.com/webscr&cmd=_express-checkout&token=
-	   */
-	
-	//	LIVE
-	// private $PAYPAL_URL = 'https://www.paypal.com/webscr&cmd=_express-checkout&token=';
-	//	SANDBOX
-	private $PAYPAL_URL = 'https://www.sandbox.paypal.com/webscr&cmd=_express-checkout&token=';
-	
-	/* Define the Reutrn and Cancel URLs. 
-	   The returnURL is the location where buyers return when a
-	   payment has been succesfully authorized.
-	   The cancelURL is the location buyers are sent to when they hit the
-	   cancel button during authorization of payment during the PayPal flow
-	   */
-	public $return_url = '';
-	public $cancel_url = '';
-	
-	/**
-	# Version: this is the API version in the request.
-	# It is a mandatory parameter for each API request.
-	# The only supported value at this time is 2.3
-	*/
-	
-	private $VERSION = '3.0';
-	
-	
-	
-	
-	
-	
+		
 	
 	// CONSTRUCT
 	function __construct()
-		{
+	{
 		// You could set variable defaults here if you like
-		}	
+	}	
 	
 	
 	
 	
 	public function DoCapture()
-		{
+	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
 		
@@ -768,18 +925,13 @@ class phpPayPal {
 		
 		// TODO: Add error handling for the hash_call
 		
-		/* Display the API response back to the browser.
-		   If the response from PayPal was a success, display the response parameters'
-		   If the response was an error, display the errors received using APIError.php.
-		   */
-		
 		/*
-			*************
-			if NO SUCCESS
-			*************
-			*/
+		*************
+		if NO SUCCESS
+		*************
+		*/
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-			{
+		{
 			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
 			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
 			$this->Error['ACK']				= $this->Response['ACK'];
@@ -805,30 +957,28 @@ class phpPayPal {
 			$this->_error_build			= @$this->Response['BUILD']; 
 			
 			return false;
-			}
-			/*
-			*************
-			if SUCCESS
-			*************
-			*/
+		}
+		/*
+		*************
+		if SUCCESS
+		*************
+		*/
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-			{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
+		{
+			/* Take the response variables and put them into the local class variables */
 			foreach($this->ResponseFieldsArray['DoCapture'] as $key => $value)
 				$this->$key = $this->Response[$value];
 			
 			return true;
-			}
 		}
+	}
 	
 	
 	
 	
 	
 	public function DoAuthorization()
-		{
+	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
 		
@@ -846,18 +996,13 @@ class phpPayPal {
 		
 		// TODO: Add error handling for the hash_call
 		
-		/* Display the API response back to the browser.
-		   If the response from PayPal was a success, display the response parameters'
-		   If the response was an error, display the errors received using APIError.php.
-		   */
-		
 		/*
-			*************
-			if NO SUCCESS
-			*************
-			*/
+		*************
+		if NO SUCCESS
+		*************
+		*/
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-			{
+		{
 			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
 			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
 			$this->Error['ACK']				= $this->Response['ACK'];
@@ -883,30 +1028,28 @@ class phpPayPal {
 			$this->_error_build			= @$this->Response['BUILD']; 
 			
 			return false;
-			}
-			/*
-			*************
-			if SUCCESS
-			*************
-			*/
+		}
+		/*
+		*************
+		if SUCCESS
+		*************
+		*/
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-			{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
+		{
+			/* Take the response variables and put them into the local class variables */
 			foreach($this->ResponseFieldsArray['DoAuthorization'] as $key => $value)
 				$this->$key = $this->Response[$value];
 			
 			return true;
-			}
 		}
+	}
 
 
 
 
 
 	public function DoReauthorization()
-		{
+	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
 		
@@ -924,18 +1067,13 @@ class phpPayPal {
 		
 		// TODO: Add error handling for the hash_call
 		
-		/* Display the API response back to the browser.
-		   If the response from PayPal was a success, display the response parameters'
-		   If the response was an error, display the errors received using APIError.php.
-		   */
-		
 		/*
-			*************
-			if NO SUCCESS
-			*************
-			*/
+		*************
+		if NO SUCCESS
+		*************
+		*/
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-			{
+		{
 			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
 			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
 			$this->Error['ACK']				= $this->Response['ACK'];
@@ -961,30 +1099,28 @@ class phpPayPal {
 			$this->_error_build			= @$this->Response['BUILD']; 
 			
 			return false;
-			}
-			/*
-			*************
-			if SUCCESS
-			*************
-			*/
+		}
+		/*
+		*************
+		if SUCCESS
+		*************
+		*/
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-			{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
+		{
+			/* Take the response variables and put them into the local class variables */
 			foreach($this->ResponseFieldsArray['DoReauthorization'] as $key => $value)
 				$this->$key = $this->Response[$value];
 			
 			return true;
-			}
 		}
+	}
 
 
 
 
 
 	public function DoVoid()
-		{
+	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
 		
@@ -1002,18 +1138,13 @@ class phpPayPal {
 		
 		// TODO: Add error handling for the hash_call
 		
-		/* Display the API response back to the browser.
-		   If the response from PayPal was a success, display the response parameters'
-		   If the response was an error, display the errors received using APIError.php.
-		   */
-		
 		/*
-			*************
-			if NO SUCCESS
-			*************
-			*/
+		*************
+		if NO SUCCESS
+		*************
+		*/
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-			{
+		{
 			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
 			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
 			$this->Error['ACK']				= $this->Response['ACK'];
@@ -1039,23 +1170,21 @@ class phpPayPal {
 			$this->_error_build			= @$this->Response['BUILD']; 
 			
 			return false;
-			}
-			/*
-			*************
-			if SUCCESS
-			*************
-			*/
+		}
+		/*
+		*************
+		if SUCCESS
+		*************
+		*/
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-			{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
+		{
+			/* Take the response variables and put them into the local class variables */
 			foreach($this->ResponseFieldsArray['DoVoid'] as $key => $value)
 				$this->$key = $this->Response[$value];
 			
 			return true;
-			}
 		}
+	}
 
 	
 	
@@ -1063,7 +1192,7 @@ class phpPayPal {
 	
 	
 	public function DoDirectPayment()
-		{
+	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
 		
@@ -1074,13 +1203,13 @@ class phpPayPal {
 		
 		/* Construct and add any items found in this instance */
 		if(!empty($this->ItemsArray))
-			{
+		{
 			// Counter for the total of all the items put together
 			$total_items_amount = 0;
 			$total_items_tax_amount = 0;
 			// Go through the items array
 			foreach($this->ItemsArray as $key => $value)
-				{
+			{
 				// Get the array of the current item from the main array
 				$current_item = $this->ItemsArray[$key];
 				// Add it to the request string
@@ -1092,7 +1221,7 @@ class phpPayPal {
 				// Add this item's amount to the total current count
 				$total_items_amount += ($current_item['amount'] * $current_item['quantity']);
 				$total_items_tax_amount += ($current_item['amount_tax'] * $current_item['quantity']);
-				}
+			}
 			// Set the amount_items for this instance and ITEMAMT added to the request string
 			$this->amount_items = $total_items_amount;
 			// Add this to our NVP string
@@ -1100,7 +1229,7 @@ class phpPayPal {
 			// If our entire tax amount is not set, we will automatically set it based on the items tax amount
 			if($this->amount_tax == 0 OR empty($this->amount_tax))
 				$nvpstr .= "&TAXAMT=".urlencode($total_items_tax_amount);
-			}
+		}
 		
 		// decode the variables incase we still require access to them in our program
 		$this->urldecodeVariables();
@@ -1111,18 +1240,13 @@ class phpPayPal {
 		
 		// TODO: Add error handling for the hash_call
 		
-		/* Display the API response back to the browser.
-		   If the response from PayPal was a success, display the response parameters'
-		   If the response was an error, display the errors received using APIError.php.
-		   */
-		
 		/*
-			*************
-			if NO SUCCESS
-			*************
-			*/
+		*************
+		if NO SUCCESS
+		*************
+		*/
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-			{
+		{
 			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
 			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
 			$this->Error['ACK']				= $this->Response['ACK'];
@@ -1148,30 +1272,28 @@ class phpPayPal {
 			$this->_error_build			= @$this->Response['BUILD']; 
 			
 			return false;
-			}
-			/*
-			*************
-			if SUCCESS
-			*************
-			*/
+		}
+		/*
+		*************
+		if SUCCESS
+		*************
+		*/
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-			{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
+		{
+			/* Take the response variables and put them into the local class variables */
 			foreach($this->ResponseFieldsArray['DoDirectPayment'] as $key => $value)
 				$this->$key = $this->Response[$value];
 			
 			return true;
-			}
 		}
+	}
 	
 	
 	
 	
 	
 	function SetExpressCheckout()
-		{
+	{
 		// TODO: Add error handling prior to trying to make PayPal calls. ie: missing amount_total or RETURN_URL
 		
 		// urlencode the needed variables
@@ -1198,12 +1320,12 @@ class phpPayPal {
 		   If the response was an error, display the errors received using APIError.php.
 		   */		
 		/*
-			*************
-			if NO SUCCESS
-			*************
-			*/
+		*************
+		if NO SUCCESS
+		*************
+		*/
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-			{
+		{
 			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
 			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
 			$this->Error['ACK']				= $this->Response['ACK'];
@@ -1232,37 +1354,35 @@ class phpPayPal {
 			$location = "APIError.php";
 			header("Location: $location");
 			*/
-			}
+		}
 		/*
-			*************
-			if SUCCESS
-			*************
-			*/
+		*************
+		if SUCCESS
+		*************
+		*/
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-			{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
+		{
+			/* Take the response variables and put them into the local class variables */
 			foreach($this->ResponseFieldsArray['SetExpressCheckout'] as $key => $value)
 				$this->$key = $this->Response[$value];
 			
 			return true;
-			}
 		}
+	}
 	
 	function SetExpressCheckoutSuccessfulRedirect()
-		{
+	{
 		// Redirect to paypal.com here
 		$token = urlencode($this->Response["TOKEN"]);
 		$paypal_url = $this->PAYPAL_URL.$token;
 		header("Location: ".$paypal_url);
-		}
+	}
 	
 	
 	
 	
 	function GetExpressCheckoutDetails()
-		{
+	{
 		// TODO: Add error handling prior to PayPal calls. ie: missing TOKEN
 		
 		/* At this point, the buyer has completed in authorizing payment
@@ -1289,12 +1409,12 @@ class phpPayPal {
 		$this->Response = $this->hash_call("GetExpressCheckoutDetails", $nvpstr);
 		
 		/*
-			*************
-			if NO SUCCESS
-			*************
-			*/
+		*************
+		if NO SUCCESS
+		*************
+		*/
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-			{
+		{
 			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
 			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
 			$this->Error['ACK']				= $this->Response['ACK'];
@@ -1319,19 +1439,14 @@ class phpPayPal {
 			$this->_error_build			= @$this->Response['BUILD']; 
 			
 			return false;
-			/*
-			$_SESSION['reshash']=$this->Response;
-			$location = "APIError.php";
-			header("Location: $location");
-			*/
-			}
+		}
 		/*
-			***********
-			if SUCCESS
-			***********
-			*/
+		***********
+		if SUCCESS
+		***********
+		*/
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-			{
+		{
 			/*
 			Take the response variables and put them into the local class variables
 			*/
@@ -1339,15 +1454,15 @@ class phpPayPal {
 				$this->$key = $this->Response[$value];
 			
 			return true;
-			}
-		
 		}
+		
+	}
 	
 	
 	
 	
 	function DoExpressCheckoutPayment()
-		{
+	{
 		// TODO: Error checking. ie: we require a token and payer_id here
 		
 		// urlencode the needed variables
@@ -1361,12 +1476,12 @@ class phpPayPal {
 		
 		/* Construct and add any items found in this instance */
 		if(!empty($this->ItemsArray))
-			{
+		{
 			// Counter for the total of all the items put together
 			$total_items_amount = 0;
 			// Go through the items array
 			foreach($this->ItemsArray as $key => $value)
-				{
+			{
 				// Get the array of the current item from the main array
 				$current_item = $this->ItemsArray[$key];
 				// Add it to the request string
@@ -1377,11 +1492,11 @@ class phpPayPal {
 							"&L_AMT".$key."=".$current_item['amount'];
 				// Add this item's amount to the total current count
 				$total_items_amount += ($current_item['amount'] * $current_item['quantity']);
-				}
+			}
 			// Set the amount_items for this instance and ITEMAMT added to the request string
 			$this->amount_items = $total_items_amount;
 			$nvpstr .= "&ITEMAMT=".$total_items_amount;
-			}
+		}
 
 		 /* Make the call to PayPal to finalize payment
 			If an error occured, show the resulting errors
@@ -1391,18 +1506,13 @@ class phpPayPal {
 		// decode the variables incase we still require access to them in our program
 		$this->urldecodeVariables();
 		
-		/* Display the API response back to the browser.
-		   If the response from PayPal was a success, display the response parameters'
-		   If the response was an error, display the errors received using APIError.php.
-		   */
-		
 		/*
 			*************
 			if NO SUCCESS
 			*************
 			*/
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-			{
+		{
 			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
 			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
 			$this->Error['ACK']				= $this->Response['ACK'];
@@ -1426,19 +1536,14 @@ class phpPayPal {
 			$this->_error_build			= @$this->Response['BUILD']; 
 			
 			return false;
-			/*
-			$_SESSION['reshash']=$this->Response;
-			$location = "APIError.php";
-			header("Location: $location");
-			*/
-			}
+		}
 		/*
 			*************
 			if SUCCESS
 			*************
 			*/
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-			{
+		{
 			/*
 			Take the response variables and put them into the local class variables
 			*/
@@ -1446,14 +1551,14 @@ class phpPayPal {
 				$this->$key = $this->Response[$value];
 			
 			return true;
-			}
 		}
+	}
 	
 	
 	
 	
 	function GetTransactionDetails()
-		{
+	{
 		/* Construct the parameter string that describes the PayPal payment
 			the varialbes were set in the web form, and the resulting string
 			is stored in $nvpstr
@@ -1468,18 +1573,13 @@ class phpPayPal {
 		   as well to display back to the browser.
 		   Normally you wouldnt not need to do this, but its shown for testing */
 		
-		/* Display the API response back to the browser.
-		   If the response from PayPal was a success, display the response parameters'
-		   If the response was an error, display the errors received using APIError.php.
-		   */
-		
 		/*
 			*************
 			if NO SUCCESS
 			*************
 			*/
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-			{
+		{
 			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
 			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
 			$this->Error['ACK']				= $this->Response['ACK'];
@@ -1503,36 +1603,29 @@ class phpPayPal {
 			$this->_error_build			= @$this->Response['BUILD']; 
 			
 			return false;
+		}
 			/*
-			$_SESSION['reshash']=$this->Response;
-			$location = "APIError.php";
-			header("Location: $location");
-			*/
-			}
-		/*
 			*************
 			if SUCCESS
 			*************
 			*/
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-			{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
+		{
+			/* Take the response variables and put them into the local class variables */
 			foreach($this->ResponseFieldsArray['GetTransactionDetails'] as $key => $value)
 				$this->$key = $this->Response[$value];
 			
 			$this->getItems($this->Response);
 			
 			return true;
-			}
 		}
+	}
 	
 	
 	
 	
 	function RefundTransaction()
-		{
+	{
 		/* Construct the parameter string that describes the PayPal payment
 			the varialbes were set in the web form, and the resulting string
 			is stored in $nvpstr
@@ -1547,18 +1640,13 @@ class phpPayPal {
 		   as well to display back to the browser.
 		   Normally you wouldnt not need to do this, but its shown for testing */
 		
-		/* Display the API response back to the browser.
-		   If the response from PayPal was a success, display the response parameters'
-		   If the response was an error, display the errors received using APIError.php.
-		   */
-		
 		/*
 			*************
 			if NO SUCCESS
 			*************
 			*/
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-			{
+		{
 			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
 			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
 			$this->Error['ACK']				= $this->Response['ACK'];
@@ -1582,32 +1670,173 @@ class phpPayPal {
 			$this->_error_build			= @$this->Response['BUILD']; 
 			
 			return false;
-			/*
-			$_SESSION['reshash']=$this->Response;
-			$location = "APIError.php";
-			header("Location: $location");
-			*/
-			}
+		}
 		/*
 			*************
 			if SUCCESS
 			*************
 			*/
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-			{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
+		{
+			/* Take the response variables and put them into the local class variables */
 			foreach($this->ResponseFieldsArray['RefundTransaction'] as $key => $value)
 				$this->$key = $this->Response[$value];
 			
 			$this->getItems($this->Response);
 			
 			return true;
-			}
+		}
+	}
+	
+	
+	
+	function CreateRecurringPaymentsProfile()
+	{
+
+		$this->urlencodeVariables();
+
+		$nvpstr = $this->generateNVPString('CreateRecurringPaymentsProfile');
+
+		$this->Response = $this->hash_call("CreateRecurringPaymentsProfile", $nvpstr);
+
+		$this->urldecodeVariables();
+
+		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
+		{
+			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+			$this->Error['ACK']				= $this->Response['ACK'];
+			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+			$this->Error['VERSION']			= @$this->Response['VERSION'];
+			$this->Error['BUILD']			= @$this->Response['BUILD'];
+			
+			$this->_error				= true;
+			$this->_error_ack			= $this->Response['ACK'];
+			$this->ack					= 'Failure';
+			$this->_error_type			= 'paypal';
+			$this->_error_date			= $this->Response['TIMESTAMP'];
+			$this->_error_code			= $this->Response['L_ERRORCODE0'];
+			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+			$this->_error_version		= @$this->Response['VERSION'];
+			$this->_error_build			= @$this->Response['BUILD']; 
+			
+			return false;
+	
 		}
 	
+		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
+		{
+			/*
+			Take the response variables and put them into the local class variables
+			*/
+			foreach($this->ResponseFieldsArray['CreateRecurringPaymentsProfile'] as $key => $value)
+				$this->$key = $this->Response[$value];
+			
+			return true;
+		}
+	}
 	
+	
+	
+	function GetRecurringPaymentsProfileDetails()
+	{
+
+		$nvpstr = $this->generateNVPString('GetRecurringPaymentsProfileDetails');
+
+		$this->Response = $this->hash_call("GetRecurringPaymentsProfileDetails", $nvpstr);
+
+		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
+		{
+			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+			$this->Error['ACK']				= $this->Response['ACK'];
+			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+			$this->Error['VERSION']			= @$this->Response['VERSION'];
+			$this->Error['BUILD']			= @$this->Response['BUILD'];
+			
+			$this->_error				= true;
+			$this->_error_ack			= $this->Response['ACK'];
+			$this->ack					= 'Failure';
+			$this->_error_type			= 'paypal';
+			$this->_error_date			= $this->Response['TIMESTAMP'];
+			$this->_error_code			= $this->Response['L_ERRORCODE0'];
+			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+			$this->_error_version		= @$this->Response['VERSION'];
+			$this->_error_build			= @$this->Response['BUILD']; 
+			
+			return false;
+
+		}
+
+		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
+		{
+
+			foreach($this->ResponseFieldsArray['GetRecurringPaymentsProfileDetails'] as $key => $value)
+				$this->$key = $this->Response[$value];
+			
+			$this->getItems($this->Response);
+			
+			return true;
+		}
+	}
+	
+	
+	
+	function UpdateRecurringPaymentsProfile()
+	{
+		$this->urlencodeVariables();
+
+		$nvpstr = $this->generateNVPString('UpdateRecurringPaymentsProfile');
+
+		$this->urldecodeVariables();
+
+		$this->Response = $this->hash_call("UpdateRecurringPaymentsProfile", $nvpstr);
+
+		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
+		{
+			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+			$this->Error['ACK']				= $this->Response['ACK'];
+			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+			$this->Error['VERSION']			= @$this->Response['VERSION'];
+			$this->Error['BUILD']			= @$this->Response['BUILD'];
+			
+			$this->_error				= true;
+			$this->_error_ack			= $this->Response['ACK'];
+			$this->ack					= 'Failure';
+			$this->_error_type			= 'paypal';
+			$this->_error_date			= $this->Response['TIMESTAMP'];
+			$this->_error_code			= $this->Response['L_ERRORCODE0'];
+			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+			$this->_error_version		= @$this->Response['VERSION'];
+			$this->_error_build			= @$this->Response['BUILD']; 
+			
+			return false;
+		}
+		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
+		{
+
+			foreach($this->ResponseFieldsArray['UpdateRecurringPaymentsProfile'] as $key => $value)
+				$this->$key = $this->Response[$value];
+			
+			return true;
+		}
+	}
 
 	
 		
@@ -1618,7 +1847,7 @@ class phpPayPal {
 	  * returns an associtive array containing the response from the server.
 	*/
 	private function hash_call($methodName, $nvpStr)
-		{
+	{
 		//setting the curl parameters.
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL,$this->API_ENDPOINT);
@@ -1656,7 +1885,7 @@ class phpPayPal {
 			*************
 			*/
 		if (curl_errno($ch)) 
-			{
+		{
 			// moving to display page to display curl errors
 
 			$_SESSION['curl_error_no'] = curl_errno($ch) ;
@@ -1671,263 +1900,256 @@ class phpPayPal {
 			$this->_error_long_message	= curl_error($ch);
 			
 			return false;
-			} 
+		} 
 		/*
 			*************
 			if SUCCESS
 			*************
 			*/
 		else 
-			{
+		{
 			//closing the curl
 			curl_close($ch);
-			}
-		
-		return $nvpResArray;
 		}
 		
-		
-		
-		/** This function will take NVPString and convert it to an Associative Array and it will decode the response.
-		  * It is usefull to search for a particular key and displaying arrays.
-		  * @nvpstr is NVPString.
-		  * @nvpArray is Associative Array.
-		  */
-		private function deformatNVP($nvpstr)
-			{
-			$intial=0;
-			$nvpArray = array();
-			
-			while(strlen($nvpstr))
-				{
-				//postion of Key
-				$keypos= strpos($nvpstr,'=');
-				//position of value
-				$valuepos = strpos($nvpstr,'&') ? strpos($nvpstr,'&'): strlen($nvpstr);
-		
-				/*getting the Key and Value values and storing in a Associative Array*/
-				$keyval=substr($nvpstr,$intial,$keypos);
-				$valval=substr($nvpstr,$keypos+1,$valuepos-$keypos-1);
-				//decoding the respose
-				$nvpArray[urldecode($keyval)] =urldecode( $valval);
-				$nvpstr=substr($nvpstr,$valuepos+1,strlen($nvpstr));
-				}
-				
-			return $nvpArray;
-			}
+		return $nvpResArray;
+	}
 		
 		
 		
+	/** This function will take NVPString and convert it to an Associative Array and it will decode the response.
+	  * It is usefull to search for a particular key and displaying arrays.
+	  * @nvpstr is NVPString.
+	  * @nvpArray is an Associative Array.
+	  */
+	private function deformatNVP($nvpstr)
+	{
+		$intial=0;
+		$nvpArray = array();
 		
-		/** This function will add an item to the itemArray for use in doDirectPayment and doExpressCheckoutPayment
-		  */
-		public function addItem($name, $number, $quantity, $amount_tax, $amount)
-			{
-			$new_item =  array(
-					'name' => $name, 
-					'number' => $number, 
-					'quantity' => $quantity, 
-					'amount_tax' => $amount_tax, 
-					'amount' => $amount);
-			
-			$this->ItemsArray[] = $new_item;
-			
-			// TODO: Should recalculate and set $this->amount_items after every new item is added. Or is this done on each request?
-			}
-		
-		
-		
-		private function getItems($passed_response)
-			{
-			// Clear any current items
-			$this->ItemsArray = '';
-			
-			// Get the items if there are any
-			// Start this off by checking for a first item
-			if(!empty($passed_response['L_NAME0']) OR !empty($passed_response['L_NUMBER0']) OR !empty($passed_response['L_QTY0']))
-				{
-				$i = 0;
-				// Start a loop to get all the items (up to 200)
-				// We'll break out of it if we stop finding items
-				while($i < 200)
-					{
-					// One of the Name, Number, and Qty fields may be empty, so check all of them
-					//   and if any of them are filled, then we have an item
-					if(!empty($passed_response['L_NAME'.$i]) OR !empty($passed_response['L_NUMBER'.$i]) OR !empty($passed_response['L_QTY'.$i]))
-						{
-						$new_item =  array(
-								'name' => $passed_response['L_NAME'.$i], 
-								'number' => $passed_response['L_NUMBER'.$i], 
-								'quantity' => $passed_response['L_QTY'.$i], 
-								'amount_tax' => $passed_response['L_TAXAMT'.$i], 
-								'amount' => $passed_response['L_AMT'.$i]);
-						
-						$this->ItemsArray[] = $new_item;
-						$i++;
-						}
-					else
-						break;
-					} // end while
-				} // end if
-			} // end function
-		
-		
-		
-		private function generateNVPString($type)
-			{
-			$temp_nvp_str = '';
-			// Go through the selected RequestFieldsArray and create the request string
-			//    based on whether the field is required or filled
-			// TODO: return error if required field is empty?
-			foreach($this->RequestFieldsArray[$type] as $key => $value)
-				{
-				if($value['required'] == 'yes')
-					$temp_nvp_str .= '&'.$value['name'].'='.$this->$key;
-				elseif(!empty($this->$key))
-					$temp_nvp_str .= '&'.$value['name'].'='.$this->$key;
-				}
-			return $temp_nvp_str;
-			}
-		
-		
-		
-		/** This function encodes all applicable variables for transport to PayPal
-		  */
-		private function urlencodeVariables()
-			{
-			// Decode all specified variables
-			$this->payment_type			= urlencode($this->payment_type);
-			
-			$this->email				= urlencode($this->email);
-			$this->first_name			= urlencode($this->first_name);
-			$this->last_name			= urlencode($this->last_name);
-			$this->credit_card_type		= urlencode($this->credit_card_type);
-			$this->credit_card_number	= urlencode($this->credit_card_number);
-			
-			// Month must be padded with leading zero
-			$this->expire_date			= urlencode(str_pad($this->expire_date, 6, '0', STR_PAD_LEFT));
-			
-			$this->cvv2_code		= urlencode($this->cvv2_code);
-			$this->address1			= urlencode($this->address1);
-			$this->address2			= urlencode($this->address2);
-			$this->city				= urlencode($this->city);
-			$this->state			= urlencode($this->state);
-			$this->postal_code		= urlencode($this->postal_code);
-			$this->country_code		= urlencode($this->country_code);
-			
-			$this->currency_code	= urlencode($this->currency_code);
-			$this->ip_address		= urlencode($this->ip_address);
-			
-			$this->shipping_name			= urlencode($this->shipping_name);
-			$this->shipping_address1		= urlencode($this->shipping_address1);
-			$this->shipping_address2		= urlencode($this->shipping_address2);
-			$this->shipping_city			= urlencode($this->shipping_city);
-			$this->shipping_state			= urlencode($this->shipping_state);
-			$this->shipping_postal_code		= urlencode($this->shipping_postal_code);
-			$this->shipping_country_code	= urlencode($this->shipping_country_code);
-			$this->shipping_phone_number	= urlencode($this->shipping_phone_number);
-			
-			$this->amount_total		= urlencode($this->amount_total);
-			$this->amount_shipping	= urlencode($this->amount_shipping);
-			$this->amount_tax		= urlencode($this->amount_tax);
-			$this->amount_handling	= urlencode($this->amount_handling);
-			$this->amount_items		= urlencode($this->amount_items);
-			
-			$this->token		= urlencode($this->token);
-			$this->payer_id		= urlencode($this->payer_id);
-			
+		while(strlen($nvpstr))
+		{
+			//postion of Key
+			$keypos= strpos($nvpstr,'=');
+			//position of value
+			$valuepos = strpos($nvpstr,'&') ? strpos($nvpstr,'&'): strlen($nvpstr);
 	
-			if(!empty($this->ItemsArray))
-				{
-				// Go through the items array
-				foreach($this->ItemsArray as $key => $value)
-					{
-					// Get the array of the current item from the main array
-					$current_item = $this->ItemsArray[$key];
-					// Encode everything
-					// TODO: use a foreach loop instead
-					$current_item['name'] = urlencode($current_item['name']);
-					$current_item['number'] = urlencode($current_item['number']);
-					$current_item['quantity'] = urlencode($current_item['quantity']);
-					$current_item['amount_tax'] = urlencode($current_item['amount_tax']);
-					$current_item['amount'] = urlencode($current_item['amount']);
-					// Put the encoded array back in the item array (replaces previous array)
-					$this->ItemsArray[$key] = $current_item;
-					}
-				}
-			}
+			/*getting the Key and Value values and storing in a Associative Array*/
+			$keyval=substr($nvpstr,$intial,$keypos);
+			$valval=substr($nvpstr,$keypos+1,$valuepos-$keypos-1);
+			//decoding the respose
+			$nvpArray[urldecode($keyval)] =urldecode( $valval);
+			$nvpstr=substr($nvpstr,$valuepos+1,strlen($nvpstr));
+		}
+			
+		return $nvpArray;
+	}
 		
-		/** This function DEcodes all applicable variables for use in application/database
-		  */
-		private function urldecodeVariables()
+		
+		
+		
+	/* This function will add an item to the itemArray for use in doDirectPayment and doExpressCheckoutPayment */
+	public function addItem($name, $number, $quantity, $amount_tax, $amount)
+	{
+		$new_item =  array(
+				'name' => $name, 
+				'number' => $number, 
+				'quantity' => $quantity, 
+				'amount_tax' => $amount_tax, 
+				'amount' => $amount);
+		
+		$this->ItemsArray[] = $new_item;
+		
+		// TODO: Should recalculate and set $this->amount_items after every new item is added. Or is this done on each request?
+	}
+	
+	
+	
+	private function getItems($passed_response)
+	{
+		// Clear any current items
+		$this->ItemsArray = '';
+		
+		// Get the items if there are any
+		// Start this off by checking for a first item
+		if(!empty($passed_response['L_NAME0']) OR !empty($passed_response['L_NUMBER0']) OR !empty($passed_response['L_QTY0']))
+		{
+			$i = 0;
+			// Start a loop to get all the items (up to 200)
+			// We'll break out of it if we stop finding items
+			while($i < 200)
 			{
-			// Decode all specified variables
-			$this->payment_type			= urldecode($this->payment_type);
-			
-			$this->email				= urldecode($this->email);
-			$this->first_name			= urldecode($this->first_name);
-			$this->last_name			= urldecode($this->last_name);
-			$this->credit_card_type		= urldecode($this->credit_card_type);
-			$this->credit_card_number	= urldecode($this->credit_card_number);
-			
-			// Month must be padded with leading zero
-			$this->expire_date			= urldecode(str_pad($this->expire_date, 6, '0', STR_PAD_LEFT));
-			
-			$this->cvv2_code		= urldecode($this->cvv2_code);
-			$this->address1			= urldecode($this->address1);
-			$this->address2			= urldecode($this->address2);
-			$this->city				= urldecode($this->city);
-			$this->state			= urldecode($this->state);
-			$this->postal_code		= urldecode($this->postal_code);
-			$this->country_code		= urldecode($this->country_code);
-			
-			$this->currency_code	= urldecode($this->currency_code);
-			$this->ip_address		= urldecode($this->ip_address);
-			
-			$this->shipping_name				= urldecode($this->shipping_name);
-			$this->shipping_address1			= urldecode($this->shipping_address1);
-			$this->shipping_address2			= urldecode($this->shipping_address2);
-			$this->shipping_city				= urldecode($this->shipping_city);
-			$this->shipping_state				= urldecode($this->shipping_state);
-			$this->shipping_postal_code			= urldecode($this->shipping_postal_code);
-			$this->shipping_country_code		= urldecode($this->shipping_country_code);
-			$this->shipping_phone_number		= urldecode($this->shipping_phone_number);
-			
-			$this->amount_total		= urldecode($this->amount_total);
-			$this->amount_shipping	= urldecode($this->amount_shipping);
-			$this->amount_tax		= urldecode($this->amount_tax);
-			$this->amount_handling	= urldecode($this->amount_handling);
-			$this->amount_items		= urldecode($this->amount_items);
-			
-			$this->token		= urldecode($this->token);
-			$this->payer_id		= urldecode($this->payer_id);
-			
-			
-			if(!empty($this->ItemsArray))
+				// One of the Name, Number, and Qty fields may be empty, so check all of them
+				//   and if any of them are filled, then we have an item
+				if(!empty($passed_response['L_NAME'.$i]) OR !empty($passed_response['L_NUMBER'.$i]) OR !empty($passed_response['L_QTY'.$i]))
 				{
-				// Go through the items array
-				foreach($this->ItemsArray as $key => $value)
-					{
-					// Get the array of the current item from the main array
-					$current_item = $this->ItemsArray[$key];
-					// Decode everything
-					// TODO: use a foreach loop instead
-					$current_item['name'] = urldecode($current_item['name']);
-					$current_item['number'] = urldecode($current_item['number']);
-					$current_item['quantity'] = urldecode($current_item['quantity']);
-					$current_item['amount_tax'] = urldecode($current_item['amount_tax']);
-					$current_item['amount'] = urldecode($current_item['amount']);
-					// Put the decoded array back in the item array (replaces previous array)
-					$this->ItemsArray[$key] = $current_item;
-					}
+					$new_item =  array(
+							'name' => $passed_response['L_NAME'.$i], 
+							'number' => $passed_response['L_NUMBER'.$i], 
+							'quantity' => $passed_response['L_QTY'.$i], 
+							'amount_tax' => $passed_response['L_TAXAMT'.$i], 
+							'amount' => $passed_response['L_AMT'.$i]);
+					
+					$this->ItemsArray[] = $new_item;
+					$i++;
 				}
+				else
+					break;
+			} // end while
+		} // end if
+	} // end function
+	
+	
+	
+	private function generateNVPString($type)
+	{
+		$temp_nvp_str = '';
+		// Go through the selected RequestFieldsArray and create the request string based on whether the field is required or filled
+		// TODO: return error if required field is empty?
+		foreach($this->RequestFieldsArray[$type] as $key => $value)
+		{
+			if($value['required'] == 'yes')
+				$temp_nvp_str .= '&'.$value['name'].'='.$this->$key;
+			elseif(!empty($this->$key))
+				$temp_nvp_str .= '&'.$value['name'].'='.$this->$key;
+		}
+		return $temp_nvp_str;
+	}
+	
+	
+	
+	/* This function encodes all applicable variables for transport to PayPal */
+	private function urlencodeVariables()
+	{
+		// Decode all specified variables
+		$this->payment_type			= urlencode($this->payment_type);
+		
+		$this->email				= urlencode($this->email);
+		$this->first_name			= urlencode($this->first_name);
+		$this->last_name			= urlencode($this->last_name);
+		$this->credit_card_type		= urlencode($this->credit_card_type);
+		$this->credit_card_number	= urlencode($this->credit_card_number);
+		
+		// Month must be padded with leading zero
+		$this->expire_date			= urlencode(str_pad($this->expire_date, 6, '0', STR_PAD_LEFT));
+		
+		$this->cvv2_code		= urlencode($this->cvv2_code);
+		$this->address1			= urlencode($this->address1);
+		$this->address2			= urlencode($this->address2);
+		$this->city				= urlencode($this->city);
+		$this->state			= urlencode($this->state);
+		$this->postal_code		= urlencode($this->postal_code);
+		$this->country_code		= urlencode($this->country_code);
+		
+		$this->currency_code	= urlencode($this->currency_code);
+		$this->ip_address		= urlencode($this->ip_address);
+		
+		$this->shipping_name			= urlencode($this->shipping_name);
+		$this->shipping_address1		= urlencode($this->shipping_address1);
+		$this->shipping_address2		= urlencode($this->shipping_address2);
+		$this->shipping_city			= urlencode($this->shipping_city);
+		$this->shipping_state			= urlencode($this->shipping_state);
+		$this->shipping_postal_code		= urlencode($this->shipping_postal_code);
+		$this->shipping_country_code	= urlencode($this->shipping_country_code);
+		$this->shipping_phone_number	= urlencode($this->shipping_phone_number);
+		
+		$this->amount_total		= urlencode($this->amount_total);
+		$this->amount_shipping	= urlencode($this->amount_shipping);
+		$this->amount_tax		= urlencode($this->amount_tax);
+		$this->amount_handling	= urlencode($this->amount_handling);
+		$this->amount_items		= urlencode($this->amount_items);
+		
+		$this->token		= urlencode($this->token);
+		$this->payer_id		= urlencode($this->payer_id);
+		
+
+		if(!empty($this->ItemsArray))
+		{
+			// Go through the items array
+			foreach($this->ItemsArray as $key => $value)
+			{
+				// Get the array of the current item from the main array
+				$current_item = $this->ItemsArray[$key];
+				// Encode everything
+				// TODO: use a foreach loop instead
+				$current_item['name'] = urlencode($current_item['name']);
+				$current_item['number'] = urlencode($current_item['number']);
+				$current_item['quantity'] = urlencode($current_item['quantity']);
+				$current_item['amount_tax'] = urlencode($current_item['amount_tax']);
+				$current_item['amount'] = urlencode($current_item['amount']);
+				// Put the encoded array back in the item array (replaces previous array)
+				$this->ItemsArray[$key] = $current_item;
 			}
+		}
+	}
+	
+	/* This function Decodes all applicable variables for use in application/database */
+	private function urldecodeVariables()
+	{
+		// Decode all specified variables
+		$this->payment_type			= urldecode($this->payment_type);
+		
+		$this->email				= urldecode($this->email);
+		$this->first_name			= urldecode($this->first_name);
+		$this->last_name			= urldecode($this->last_name);
+		$this->credit_card_type		= urldecode($this->credit_card_type);
+		$this->credit_card_number	= urldecode($this->credit_card_number);
+		
+		// Month must be padded with leading zero
+		$this->expire_date			= urldecode(str_pad($this->expire_date, 6, '0', STR_PAD_LEFT));
+		
+		$this->cvv2_code		= urldecode($this->cvv2_code);
+		$this->address1			= urldecode($this->address1);
+		$this->address2			= urldecode($this->address2);
+		$this->city				= urldecode($this->city);
+		$this->state			= urldecode($this->state);
+		$this->postal_code		= urldecode($this->postal_code);
+		$this->country_code		= urldecode($this->country_code);
+		
+		$this->currency_code	= urldecode($this->currency_code);
+		$this->ip_address		= urldecode($this->ip_address);
+		
+		$this->shipping_name				= urldecode($this->shipping_name);
+		$this->shipping_address1			= urldecode($this->shipping_address1);
+		$this->shipping_address2			= urldecode($this->shipping_address2);
+		$this->shipping_city				= urldecode($this->shipping_city);
+		$this->shipping_state				= urldecode($this->shipping_state);
+		$this->shipping_postal_code			= urldecode($this->shipping_postal_code);
+		$this->shipping_country_code		= urldecode($this->shipping_country_code);
+		$this->shipping_phone_number		= urldecode($this->shipping_phone_number);
+		
+		$this->amount_total		= urldecode($this->amount_total);
+		$this->amount_shipping	= urldecode($this->amount_shipping);
+		$this->amount_tax		= urldecode($this->amount_tax);
+		$this->amount_handling	= urldecode($this->amount_handling);
+		$this->amount_items		= urldecode($this->amount_items);
+		
+		$this->token		= urldecode($this->token);
+		$this->payer_id		= urldecode($this->payer_id);
+		
+		
+		if(!empty($this->ItemsArray))
+		{
+			// Go through the items array
+			foreach($this->ItemsArray as $key => $value)
+			{
+				// Get the array of the current item from the main array
+				$current_item = $this->ItemsArray[$key];
+				// Decode everything
+				// TODO: use a foreach loop instead
+				$current_item['name'] = urldecode($current_item['name']);
+				$current_item['number'] = urldecode($current_item['number']);
+				$current_item['quantity'] = urldecode($current_item['quantity']);
+				$current_item['amount_tax'] = urldecode($current_item['amount_tax']);
+				$current_item['amount'] = urldecode($current_item['amount']);
+				// Put the decoded array back in the item array (replaces previous array)
+				$this->ItemsArray[$key] = $current_item;
+			}
+		}
+	}
 
 
-
-
-// END CLASS
-}
+}  // END CLASS
 
 
 
