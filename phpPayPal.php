@@ -22,7 +22,7 @@
 
 /*
 	--------------------------------
-		phpPayPal Version 0.7
+		phpPayPal Version 0.8
 	--------------------------------
 */
 
@@ -34,15 +34,6 @@ class phpPayPal {
 	// PRIVATE VARIABLES
 	// ---------------------------
 	// NOTE: LIVE and SANDBOX variables are included.  Sandbox is enabled by default.
-	
-	/******************************************************************************
-		PayPal includes the following API Signature for making API
-		calls to the PayPal sandbox:
-		
-		API Username 	sdk-three_api1.sdk.com
-		API Password 	QFZCWN5HZM8VBG7Q
-		API Signature 	A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU
-	*******************************************************************************/
 	
 	private $sandbox	= TRUE;
 	private $live		= FALSE;
