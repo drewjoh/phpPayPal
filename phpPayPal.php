@@ -17,7 +17,7 @@
 	See the License for the specific language governing permissions and 
 	limitations under the License.
 	
-	Get, Create and Updte Recurring Payment Profiles available thanks to Bill Joslin (billjoslin.com)!
+	Get, Create and Update Recurring Payment Profiles available thanks to Bill Joslin (billjoslin.com)!
 */
 
 /*
