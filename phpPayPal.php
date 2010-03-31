@@ -20,14 +20,6 @@
 	Get, Create and Update Recurring Payment Profiles available thanks to Bill Joslin (billjoslin.com)!
 */
 
-/*
-	--------------------------------
-		phpPayPal Version 0.8
-	--------------------------------
-*/
-
-
-
 class phpPayPal { 
 	
 	// ---------------------------
@@ -245,7 +237,7 @@ class phpPayPal {
 	public $period; // PERIOD
 	public $buyer_id; // BUYERID
 	public $closing_date; // CLOSINGDATE
-	public $multiitem; // MULTIITEM
+	public $multi_item; // MULTIITEM
 	
 	public $refund_type; // REFUNDTYPE
 	
@@ -400,64 +392,66 @@ class phpPayPal {
 	
 	public $RequestFieldsArray = array(
 		'DoCapture' => array(
-				'authorization_id' 			=> array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
-				'amount' 					=> array('name' =>'AMT', 'required' => 'yes'),
-				'currency_code' 			=> array('name' =>'CURRENCYCODE', 'required' => 'no'),
-				'complete_type' 			=> array('name' =>'COMPLETETYPE', 'required' => 'yes'),
-				'invoice_number' 			=> array('name' =>'INVNUM', 'required' => 'no'),
-				'note' 						=> array('name' =>'NOTE', 'required' => 'no'),
-				'soft_descriptor' 			=> array('name' =>'SOFTDESCRIPTOR', 'required' => 'no')
+				'authorization_id' 			=> array('name' =>'AUTHORIZATIONID',		'required' => 'yes'),
+				'amount' 					=> array('name' =>'AMT',					'required' => 'yes'),
+				'currency_code' 			=> array('name' =>'CURRENCYCODE',			'required' => 'no'),
+				'complete_type' 			=> array('name' =>'COMPLETETYPE',			'required' => 'yes'),
+				'invoice_number' 			=> array('name' =>'INVNUM',					'required' => 'no'),
+				'note' 						=> array('name' =>'NOTE',					'required' => 'no'),
+				'soft_descriptor' 			=> array('name' =>'SOFTDESCRIPTOR',			'required' => 'no')
 				),
 		'DoAuthorization' => array(
-				'transaction_id' 			=> array('name' =>'TRANSACTIONID', 'required' => 'yes'),
-				'amount' 					=> array('name' =>'AMT', 'required' => 'yes'),
-				'transaction_entity' 		=> array('name' =>'TRANSACTIONENTITY', 'required' => 'no'),
-				'currency_code' 			=> array('name' =>'CURRENCYCODE', 'required' => 'no')
+				'transaction_id' 			=> array('name' =>'TRANSACTIONID',			'required' => 'yes'),
+				'amount' 					=> array('name' =>'AMT',					'required' => 'yes'),
+				'transaction_entity' 		=> array('name' =>'TRANSACTIONENTITY',		'required' => 'no'),
+				'currency_code' 			=> array('name' =>'CURRENCYCODE',			'required' => 'no')
 				),
 		'DoReauthorization' => array(
-				'authorization_id' 			=> array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
-				'amount'					=> array('name' =>'AMT', 'required' => 'yes')
+				'authorization_id' 			=> array('name' =>'AUTHORIZATIONID',		'required' => 'yes'),
+				'amount'					=> array('name' =>'AMT',					'required' => 'yes')
 				),
 		'DoVoid' => array(
-				'authorization_id' 			=> array('name' =>'AUTHORIZATIONID', 'required' => 'yes'),
-				'note' 						=> array('name' =>'NOTE', 'required' => 'no')
+				'authorization_id' 			=> array('name' =>'AUTHORIZATIONID',		'required' => 'yes'),
+				'note' 						=> array('name' =>'NOTE',					'required' => 'no')
 				),
 		'DoDirectPayment' => array(
-				'payment_type' 				=> array('name' => 'PAYMENTACTION', 'required' => 'yes'),
-				'ip_address' 				=> array('name' => 'IPADDRESS', 'required' => 'yes'),
-				'return_fmf_details' 		=> array('name' => 'RETURNFMFDETAILS', 'required' => 'no'),
-				'amount_total' 				=> array('name' => 'AMT', 'required' => 'yes'), 
-				'credit_card_type' 			=> array('name' => 'CREDITCARDTYPE', 'required' => 'yes'), 
-				'credit_card_number'		=> array('name' => 'ACCT', 'required' => 'yes'), 
-				'expire_date' 				=> array('name' => 'EXPDATE', 'required' => 'yes'), 
-				'first_name' 				=> array('name' => 'FIRSTNAME', 'required' => 'yes'), 
-				'last_name' 				=> array('name' => 'LASTNAME', 'required' => 'yes'), 
-				'address1' 					=> array('name' => 'STREET', 'required' => 'no'), 
-				'address2' 					=> array('name' => 'STREET2', 'required' => 'no'), 
-				'city' 						=> array('name' => 'CITY', 'required' => 'no'), 
-				'state' 					=> array('name' => 'STATE', 'required' => 'no'), 
-				'country_code' 				=> array('name' => 'COUNTRYCODE', 'required' => 'no'), 
-				'postal_code' 				=> array('name' => 'ZIP', 'required' => 'no'), 
-				'notify_url' 				=> array('name' => 'NOTIFYURL', 'required' => 'no'), 
-				'currency_code' 			=> array('name' => 'CURRENCYCODE', 'required' => 'no'), 
-				'amount_items' 				=> array('name' => 'ITEMAMT', 'required' => 'no'), 
-				'amount_shipping' 			=> array('name' => 'SHIPPINGAMT', 'required' => 'no'), 
-				'amount_handling' 			=> array('name' => 'HANDLINGAMT', 'required' => 'no'), 
-				'amount_tax' 				=> array('name' => 'TAXAMT', 'required' => 'no'), 
-				'description' 				=> array('name' => 'DESC', 'required' => 'no'), 
-				'custom' 					=> array('name' => 'CUSTOM', 'required' => 'no'), 
-				'invoice_number' 			=> array('name' => 'INVNUM', 'required' => 'no'), 
-				'cvv2_code' 				=> array('name' => 'CVV2', 'required' => 'yes'), 
-				'email' 					=> array('name' => 'EMAIL', 'required' => 'no'), 
-				'phone_number' 				=> array('name' => 'PHONENUM', 'required' => 'no'), 
-				'shipping_name' 			=> array('name' => 'SHIPTONAME', 'required' => 'no'), 
-				'shipping_address1' 		=> array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
-				'shipping_address2' 		=> array('name' => 'SHIPTOSTREET2', 'required' => 'no'), 
-				'shipping_city' 			=> array('name' => 'SHIPTOCITY', 'required' => 'no'), 
-				'shipping_state' 			=> array('name' => 'SHIPTOSTATE', 'required' => 'no'), 
-				'shipping_postal_code' 		=> array('name' => 'SHIPTOZIP', 'required' => 'no'), 
-				'shipping_country_code'		=> array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
-				'shipping_phone_number' 	=> array('name' => 'SHIPTOPHONENUM', 'required' => 'no')
+				'payment_type' 				=> array('name' => 'PAYMENTACTION',			'required' => 'yes'),
+				'ip_address' 				=> array('name' => 'IPADDRESS',				'required' => 'yes'),
+				'return_fmf_details' 		=> array('name' => 'RETURNFMFDETAILS',		'required' => 'no'),
+				'amount_total' 				=> array('name' => 'AMT',					'required' => 'yes'), 
+				'credit_card_type' 			=> array('name' => 'CREDITCARDTYPE',		'required' => 'yes'), 
+				'credit_card_number'		=> array('name' => 'ACCT',					'required' => 'yes'), 
+				'expire_date' 				=> array('name' => 'EXPDATE',				'required' => 'yes'), 
+				'first_name' 				=> array('name' => 'FIRSTNAME',				'required' => 'yes'), 
+				'last_name' 				=> array('name' => 'LASTNAME',				'required' => 'yes'), 
+				'address1' 					=> array('name' => 'STREET',				'required' => 'no'), 
+				'address2' 					=> array('name' => 'STREET2',				'required' => 'no'), 
+				'city' 						=> array('name' => 'CITY',					'required' => 'no'), 
+				'state' 					=> array('name' => 'STATE',					'required' => 'no'), 
+				'country_code' 				=> array('name' => 'COUNTRYCODE',			'required' => 'no'), 
+				'postal_code' 				=> array('name' => 'ZIP',					'required' => 'no'), 
+				'notify_url' 				=> array('name' => 'NOTIFYURL',				'required' => 'no'), 
+				'currency_code' 			=> array('name' => 'CURRENCYCODE',			'required' => 'no'), 
+				'amount_items' 				=> array('name' => 'ITEMAMT',				'required' => 'no'), 
+				'amount_shipping' 			=> array('name' => 'SHIPPINGAMT',			'required' => 'no'), 
+				'amount_handling' 			=> array('name' => 'HANDLINGAMT',			'required' => 'no'), 
+				'amount_tax' 				=> array('name' => 'TAXAMT',				'required' => 'no'), 
+				'description' 				=> array('name' => 'DESC',					'required' => 'no'), 
+				'custom' 					=> array('name' => 'CUSTOM',				'required' => 'no'), 
+				'invoice_number' 			=> array('name' => 'INVNUM',				'required' => 'no'), 
+				'cvv2_code' 				=> array('name' => 'CVV2',					'required' => 'yes'), 
+				'start_date' 				=> array('name' => 'STARTDATE',				'required' => 'no'), // For Maestro/Solo cards
+				'issue_number'				=> array('name' => 'ISSUENUMBER',			'required' => 'no'), // For maestro/Solo Cards
+				'email' 					=> array('name' => 'EMAIL',					'required' => 'no'), 
+				'phone_number' 				=> array('name' => 'PHONENUM',				'required' => 'no'), 
+				'shipping_name' 			=> array('name' => 'SHIPTONAME',			'required' => 'no'), 
+				'shipping_address1' 		=> array('name' => 'SHIPTOSTREET',			'required' => 'no'), 
+				'shipping_address2' 		=> array('name' => 'SHIPTOSTREET2',			'required' => 'no'), 
+				'shipping_city' 			=> array('name' => 'SHIPTOCITY',			'required' => 'no'), 
+				'shipping_state' 			=> array('name' => 'SHIPTOSTATE',			'required' => 'no'), 
+				'shipping_postal_code' 		=> array('name' => 'SHIPTOZIP',				'required' => 'no'), 
+				'shipping_country_code'		=> array('name' => 'SHIPTOCOUNTRYCODE',		'required' => 'no'), 
+				'shipping_phone_number' 	=> array('name' => 'SHIPTOPHONENUM',		'required' => 'no')
 				),		
 		'SetExpressCheckout' => array(
 				'return_url' 				=> array('name' => 'RETURNURL', 'required' => 'yes'),
@@ -496,98 +490,97 @@ class phpPayPal {
 				'billing_agreement' 		=> array('name' => 'L_BILLINGAGREEMENTDESCRIPTION0', 'required' => 'no') 
 				),		
 		'GetExpressCheckoutDetails' => array(
-				'token' 					=> array('name' => 'TOKEN', 'required' => 'yes')
+				'token' 					=> array('name' => 'TOKEN',					'required' => 'yes')
 				),		
 		'DoExpressCheckoutPayment' => array(
-				'token' 					=> array('name' => 'TOKEN', 'required' => 'yes'),
-				'payment_type' 				=> array('name' => 'PAYMENTACTION', 'required' => 'yes'), 
-				'payer_id' 					=> array('name' => 'PAYERID', 'required' => 'yes'),
-				'amount_total' 				=> array('name' => 'AMT', 'required' => 'yes'), 
-				'description' 				=> array('name' => 'DESC', 'required' => 'no'), 
-				'custom' 					=> array('name' => 'CUSTOM', 'required' => 'no'), 
-				'invoice_number' 			=> array('name' => 'INVNUM', 'required' => 'no'), 
-				'notify_url' 				=> array('name' => 'NOTIFYURL', 'required' => 'no'), 
-				'amount_items' 				=> array('name' => 'ITEMAMT', 'required' => 'no'), 
-				'amount_shipping' 			=> array('name' => 'SHIPPINGAMT', 'required' => 'no'), 
-				'amount_handling' 			=> array('name' => 'HANDLINGAMT', 'required' => 'no'), 
-				'amount_tax' 				=> array('name' => 'TAXAMT', 'required' => 'no'), 
-				'currency_code' 			=> array('name' => 'CURRENCYCODE', 'required' => 'no'), 
-				'shipping_name' 			=> array('name' => 'SHIPTONAME', 'required' => 'no'), 
-				'shipping_address1' 		=> array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
-				'shipping_address2' 		=> array('name' => 'SHIPTOSTREET2', 'required' => 'no'), 
-				'shipping_city' 			=> array('name' => 'SHIPTOCITY', 'required' => 'no'), 
-				'shipping_state' 			=> array('name' => 'SHIPTOSTATE', 'required' => 'no'), 
-				'shipping_postal_code' 		=> array('name' => 'SHIPTOZIP', 'required' => 'no'), 
-				'shipping_country_code' 	=> array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
-				'shipping_phone_number' 	=> array('name' => 'SHIPTOPHONENUM', 'required' => 'no')
+				'token' 					=> array('name' => 'TOKEN',					'required' => 'yes'),
+				'payment_type' 				=> array('name' => 'PAYMENTACTION',			'required' => 'yes'), 
+				'payer_id' 					=> array('name' => 'PAYERID',				'required' => 'yes'),
+				'amount_total' 				=> array('name' => 'AMT',					'required' => 'yes'), 
+				'description' 				=> array('name' => 'DESC',					'required' => 'no'), 
+				'custom' 					=> array('name' => 'CUSTOM',				'required' => 'no'), 
+				'invoice_number' 			=> array('name' => 'INVNUM',				'required' => 'no'), 
+				'notify_url' 				=> array('name' => 'NOTIFYURL',				'required' => 'no'), 
+				'amount_items' 				=> array('name' => 'ITEMAMT',				'required' => 'no'), 
+				'amount_shipping' 			=> array('name' => 'SHIPPINGAMT',			'required' => 'no'), 
+				'amount_handling' 			=> array('name' => 'HANDLINGAMT',			'required' => 'no'), 
+				'amount_tax' 				=> array('name' => 'TAXAMT',				'required' => 'no'), 
+				'currency_code' 			=> array('name' => 'CURRENCYCODE',			'required' => 'no'), 
+				'shipping_name' 			=> array('name' => 'SHIPTONAME',			'required' => 'no'), 
+				'shipping_address1' 		=> array('name' => 'SHIPTOSTREET',			'required' => 'no'), 
+				'shipping_address2' 		=> array('name' => 'SHIPTOSTREET2',			'required' => 'no'), 
+				'shipping_city' 			=> array('name' => 'SHIPTOCITY',			'required' => 'no'), 
+				'shipping_state' 			=> array('name' => 'SHIPTOSTATE',			'required' => 'no'), 
+				'shipping_postal_code' 		=> array('name' => 'SHIPTOZIP',				'required' => 'no'), 
+				'shipping_country_code' 	=> array('name' => 'SHIPTOCOUNTRYCODE',		'required' => 'no'), 
+				'shipping_phone_number' 	=> array('name' => 'SHIPTOPHONENUM',		'required' => 'no')
 				),		
 		'GetTransactionDetails' => array(
-				'transaction_id' 			=> array('name' => 'TRANSACTIONID', 'required' => 'yes')
+				'transaction_id' 			=> array('name' => 'TRANSACTIONID',			'required' => 'yes')
 				),		
 		'RefundTransaction' => array(
-				'transaction_id'			=> array('name' => 'TRANSACTIONID', 'required' => 'yes'), 
-				'refund_type'				=> array('name' => 'REFUNDTYPE', 'required' => 'yes'), 
-				'amount_total' 				=> array('name' => 'AMT', 'required' => 'no'), 
-				'note' 						=> array('name' => 'NOTE', 'required' => 'no'),
+				'transaction_id'			=> array('name' => 'TRANSACTIONID',			'required' => 'yes'), 
+				'refund_type'				=> array('name' => 'REFUNDTYPE',			'required' => 'yes'), 
+				'amount_total' 				=> array('name' => 'AMT',					'required' => 'no'), 
+				'note' 						=> array('name' => 'NOTE',					'required' => 'no'),
 				),
 		'CreateRecurringPaymentsProfile' => array(
-				'token' 					=> array('name' => 'TOKEN', 'required' => 'yes'),
-				'payer_id' 					=> array('name' => 'PAYERID', 'required' => 'yes'),
-				'email' 				 	=> array('name' => 'EMAIL', 'required' => 'yes'),
-				'country_code'    			=> array('name' => 'COUNTRYCODE', 'required' => 'no'),
-				'business'    				=> array('name' => 'BUSINESS', 'required' => 'no'),
-				'payer_status'				=> array('name' => 'PAYERSTATUS', 'required' => 'no'),
-				'subscriber_name' 			=> array('name' => 'SUBSCRIBERNAME', 'required' => 'yes'),
-				'CL_ID' 					=> array('name' => 'PROFILEREFERENCE', 'required' => 'yes'),
-				'credit_card_type'			=> array('name' => 'CREDITCARDTYPE', 'required' => 'yes'), 
-				'credit_card_number' 		=> array('name' => 'ACCT', 'required' => 'yes'), 
-				'expire_date' 				=> array('name' => 'EXPDATE', 'required' => 'yes'), 
-				'first_name' 				=> array('name' => 'FIRSTNAME', 'required' => 'yes'), 
-				'last_name' 				=> array('name' => 'LASTNAME', 'required' => 'yes'), 
-				'address1' 					=> array('name' => 'STREET', 'required' => 'no'), 
-				'address2' 					=> array('name' => 'STREET2', 'required' => 'no'), 
-				'city' 						=> array('name' => 'CITY', 'required' => 'no'), 
-				'state' 					=> array('name' => 'STATE', 'required' => 'no'), 
-				'country_code' 				=> array('name' => 'COUNTRYCODE', 'required' => 'no'), 
-				'postal_code' 				=> array('name' => 'ZIP', 'required' => 'no'),
+				'token' 					=> array('name' => 'TOKEN',					'required' => 'yes'),
+				'payer_id' 					=> array('name' => 'PAYERID',				'required' => 'yes'),
+				'email' 				 	=> array('name' => 'EMAIL',					'required' => 'yes'),
+				'country_code'    			=> array('name' => 'COUNTRYCODE',			'required' => 'no'),
+				'business'    				=> array('name' => 'BUSINESS',				'required' => 'no'),
+				'payer_status'				=> array('name' => 'PAYERSTATUS',			'required' => 'no'),
+				'subscriber_name' 			=> array('name' => 'SUBSCRIBERNAME',		'required' => 'yes'),
+				'profile_reference'			=> array('name' => 'PROFILEREFERENCE',		'required' => 'yes'),
+				'credit_card_type'			=> array('name' => 'CREDITCARDTYPE',		'required' => 'yes'), 
+				'credit_card_number' 		=> array('name' => 'ACCT',					'required' => 'yes'), 
+				'expire_date' 				=> array('name' => 'EXPDATE',				'required' => 'yes'), 
+				'first_name' 				=> array('name' => 'FIRSTNAME',				'required' => 'yes'), 
+				'last_name' 				=> array('name' => 'LASTNAME',				'required' => 'yes'), 
+				'address1' 					=> array('name' => 'STREET',				'required' => 'no'), 
+				'address2' 					=> array('name' => 'STREET2',				'required' => 'no'), 
+				'city' 						=> array('name' => 'CITY',					'required' => 'no'), 
+				'state' 					=> array('name' => 'STATE',					'required' => 'no'), 
+				'country_code' 				=> array('name' => 'COUNTRYCODE',			'required' => 'no'), 
+				'postal_code' 				=> array('name' => 'ZIP',					'required' => 'no'),
 				
-				'shipping_name' 			=> array('name' => 'SHIPTONAME', 'required' => 'no'), 
-				'shipping_address1'			=> array('name' => 'SHIPTOSTREET', 'required' => 'no'), 
-				'shipping_address2' 		=> array('name' => 'SHIPTOSTREET2', 'required' => 'no'), 
-				'shipping_city' 			=> array('name' => 'SHIPTOCITY', 'required' => 'no'), 
-				'shipping_state' 			=> array('name' => 'SHIPTOSTATE', 'required' => 'no'), 
-				'shipping_postal_code' 		=> array('name' => 'SHIPTOZIP', 'required' => 'no'), 
-				'shipping_country_code' 	=> array('name' => 'SHIPTOCOUNTRYCODE', 'required' => 'no'), 
-				'shipping_phone_number' 	=> array('name' => 'SHIPTOPHONENUM', 'required' => 'no'),
+				'shipping_name' 			=> array('name' => 'SHIPTONAME',			'required' => 'no'), 
+				'shipping_address1'			=> array('name' => 'SHIPTOSTREET',			'required' => 'no'), 
+				'shipping_address2' 		=> array('name' => 'SHIPTOSTREET2',			'required' => 'no'), 
+				'shipping_city' 			=> array('name' => 'SHIPTOCITY',			'required' => 'no'), 
+				'shipping_state' 			=> array('name' => 'SHIPTOSTATE',			'required' => 'no'), 
+				'shipping_postal_code' 		=> array('name' => 'SHIPTOZIP',				'required' => 'no'), 
+				'shipping_country_code' 	=> array('name' => 'SHIPTOCOUNTRYCODE',		'required' => 'no'), 
+				'shipping_phone_number' 	=> array('name' => 'SHIPTOPHONENUM',		'required' => 'no'),
 				 
-				'description' 				=> array('name' => 'DESC', 'required' => 'yes'), // You must match the billing agreement var in set Express checkout
-				'currency'					=> array('name' => 'CURRENCYCODE', 'required' => 'yes'),
-				'payment_type' 				=> array('name' => 'PAYMENTACTION', 'required' => 'yes'),
-				'billing_type' 				=> array('name' => 'L_BILLINGTYPE0', 'required' => 'yes'),
+				'description' 				=> array('name' => 'DESC',					'required' => 'yes'), // You must match the billing agreement var in set Express checkout
+				'currency'					=> array('name' => 'CURRENCYCODE',			'required' => 'yes'),
+				'payment_type' 				=> array('name' => 'PAYMENTACTION',			'required' => 'yes'),
+				'billing_type' 				=> array('name' => 'L_BILLINGTYPE0',		'required' => 'yes'),
 				'billing_agreement' 		=> array('name' => 'L_BILLINGAGREEMENTDESCRIPTION0', 'required' => 'yes'),
-				'profile_start_date'		=> array('name' => 'PROFILESTARTDATE', 'required' => 'yes'),
-				'billing_period' 			=> array('name' => 'BILLINGPERIOD', 'required' => 'yes'), // Day Week Month SemiMonth Year
-				'billing_frequency' 		=> array('name' => 'BILLINGFREQUENCY', 'required' => 'yes'),
-				'billing_amount' 			=> array('name' => 'AMT', 'required' => 'yes'),
-				'tax_amount' 				=> array('name' => 'TAXAMT', 'required' => 'yes'),
-				'ship_amount' 				=> array('name' => 'SHIPPINGAMT', 'required' => 'yes'),
-				'inital_amount' 			=> array('name' => 'INITAMT', 'required' => 'no'),
-				'failed_inital_amount' 		=> array('name' => 'FAILEDINITAMTACTION', 'required' => 'no'),
-				'billing_total_cycles' 		=> array('name' => 'TOTALBILLINGCYCLES', 'required' => 'no'),
-				'trial_billing_period' 		=> array('name' => 'TRIALBILLINGPERIOD', 'required' => 'no'),
-				'trial_billing_frequency' 	=> array('name' => 'TRIALBILLINGFREQUENCY', 'required' => 'no'),
-				'trial_amount' 				=> array('name' => 'TRIALAMT', 'required' => 'no'),	
+				'profile_start_date'		=> array('name' => 'PROFILESTARTDATE',		'required' => 'yes'),
+				'billing_period' 			=> array('name' => 'BILLINGPERIOD',			'required' => 'yes'), // Day Week Month SemiMonth Year
+				'billing_frequency' 		=> array('name' => 'BILLINGFREQUENCY',		'required' => 'yes'),
+				'billing_amount' 			=> array('name' => 'AMT',					'required' => 'yes'),
+				'tax_amount' 				=> array('name' => 'TAXAMT',				'required' => 'yes'),
+				'ship_amount' 				=> array('name' => 'SHIPPINGAMT',			'required' => 'yes'),
+				'inital_amount' 			=> array('name' => 'INITAMT',				'required' => 'no'),
+				'failed_inital_amount' 		=> array('name' => 'FAILEDINITAMTACTION',	'required' => 'no'),
+				'billing_total_cycles' 		=> array('name' => 'TOTALBILLINGCYCLES',	'required' => 'no'),
+				'trial_billing_period' 		=> array('name' => 'TRIALBILLINGPERIOD',	'required' => 'no'),
+				'trial_billing_frequency' 	=> array('name' => 'TRIALBILLINGFREQUENCY',	'required' => 'no'),
+				'trial_amount' 				=> array('name' => 'TRIALAMT', 				'required' => 'no'),	
 				'trial_billing_cycle' 		=> array('name' => 'TRIALTOTALBILLINGCYCLES', 'required' => 'no'),				
-				'max_failed_attempts'  		=> array('name' => 'MAXFAILEDPAYMENTS', 'required' => 'no'),
-				'auto_bill_amt'  			=> array('name' => 'AUTOBILLOUTAMT', 'required' => 'no')
+				'max_failed_attempts'  		=> array('name' => 'MAXFAILEDPAYMENTS', 	'required' => 'no'),
+				'auto_bill_amt'  			=> array('name' => 'AUTOBILLOUTAMT', 		'required' => 'no')
 				),
 		'UpdateRecurringPaymentsProfile' => array(
-				'method'					=> array('name' => 'METHOD', 				'required' => 'no'),
 				'profile_id'				=> array('name' => 'PROFILEID', 			'required' => 'yes'),
 				'note'						=> array('name' => 'NOTE', 					'required' => 'no'),
 				'description'				=> array('name' => 'DESC', 					'required' => 'no'),
 				'subscriber_name'			=> array('name' => 'SUBSCRIBERNAME', 		'required' => 'no'),
-				'profile_referernce'		=> array('name' => 'PROFILEREFERENCE', 		'required' => 'no'),
+				'profile_reference'			=> array('name' => 'PROFILEREFERENCE', 		'required' => 'no'),
 				'additional_billing_cycles'	=> array('name' => 'ADDITIONALBILLINGCYCLES', 'required' => 'no'),
 				'amount'					=> array('name' => 'AMT', 					'required' => 'yes'),
 				'shipping_amount'			=> array('name' => 'SHIPPINGAMT', 			'required' => 'no'),
@@ -629,6 +622,49 @@ class phpPayPal {
 				'country_code'				=> array('name' => 'COUNTRYCODE', 			'required' => 'yes'),
 				'postal_code'				=> array('name' => 'ZIP', 					'required' => 'yes'),
 				'phone_number'				=> array('name' => 'PHONENUM',				'required' => 'no')
+				),
+			'DoReferenceTransaction' => array(
+				'reference_id'				=> array('name' => 'REFERENCEID', 			'required' => 'yes'),
+				'payment_action'			=> array('name' => 'PAYMENTACTION', 		'required' => 'no'),
+				'return_fmf_details'		=> array('name' => 'RETURNFMFDETAILS', 		'required' => 'no'),
+				'soft_descriptor'			=> array('name' => 'SOFTDESCRIPTOR', 		'required' => 'no'),
+				'ship_to_name'				=> array('name' => 'SHIPTONAME', 			'required' => 'no'),
+				'ship_to_street'			=> array('name' => 'SHIPTOSTREET', 			'required' => 'no'),
+				'ship_to_street_2'			=> array('name' => 'SHIPTOSTREET2', 		'required' => 'no'),
+				'ship_to_city'				=> array('name' => 'SHIPTOCITY', 			'required' => 'no'),
+				'ship_to_province'			=> array('name' => 'SHIPTOSTATE', 			'required' => 'no'),
+				'ship_to_postal_code'		=> array('name' => 'SHIPTOZIP', 			'required' => 'no'),
+				'ship_to_country'			=> array('name' => 'SHIPTOCOUNTRY', 		'required' => 'no'),
+				'ship_to_phone_number'		=> array('name' => 'SHIPTOPHONENUM', 		'required' => 'no'),
+				'billing_period'			=> array('name' => 'BILLINGPERIOD', 		'required' => 'yes'),
+				'billing_frequency'			=> array('name' => 'BILLINGFREQUENCY', 		'required' => 'yes'),
+				'phone_number'				=> array('name' => 'PHONENUM',				'required' => 'no'),
+				'amount_total' 				=> array('name' => 'AMT',					'required' => 'yes'), 
+				'currency_code' 			=> array('name' => 'CURRENCYCODE',			'required' => 'no'), 
+				'amount_items' 				=> array('name' => 'ITEMAMT',				'required' => 'no'), 
+				'amount_shipping' 			=> array('name' => 'SHIPPINGAMT',			'required' => 'no'), 
+				'amount_handling' 			=> array('name' => 'HANDLINGAMT',			'required' => 'no'), 
+				'amount_tax' 				=> array('name' => 'TAXAMT',				'required' => 'no'), 
+				'description' 				=> array('name' => 'DESC',					'required' => 'no'), 
+				'custom' 					=> array('name' => 'CUSTOM',				'required' => 'no'), 
+				'invoice_number' 			=> array('name' => 'INVNUM',				'required' => 'no'), 
+				'button_source' 			=> array('name' => 'BUTTONSOURCE',			'required' => 'no'), 
+				'notify_url' 				=> array('name' => 'NOTIFYURL',				'required' => 'no'), 
+				'credit_card_type' 			=> array('name' => 'CREDITCARDTYPE',		'required' => 'no'), 
+				'credit_card_number'		=> array('name' => 'ACCT',					'required' => 'no'), 
+				'cvv2_code' 				=> array('name' => 'CVV2',					'required' => 'yes'), 
+				'expire_date' 				=> array('name' => 'EXPDATE',				'required' => 'no'),
+				'start_date' 				=> array('name' => 'STARTDATE',				'required' => 'no'), // For Maestro/Solo cards
+				'issue_number'				=> array('name' => 'ISSUENUMBER',			'required' => 'no'), // For maestro/Solo Cards
+				'email' 					=> array('name' => 'EMAIL',					'required' => 'no'),
+				'first_name' 				=> array('name' => 'FIRSTNAME',				'required' => 'no'),
+				'last_name' 				=> array('name' => 'LASTNAME',				'required' => 'no'), 
+				'address1' 					=> array('name' => 'STREET',				'required' => 'no'), 
+				'address2' 					=> array('name' => 'STREET2',				'required' => 'no'), 
+				'city' 						=> array('name' => 'CITY',					'required' => 'no'), 
+				'state' 					=> array('name' => 'STATE',					'required' => 'no'), 
+				'country_code' 				=> array('name' => 'COUNTRYCODE',			'required' => 'no'), 
+				'postal_code' 				=> array('name' => 'ZIP',					'required' => 'no')
 				)
 		);
 	
@@ -802,7 +838,7 @@ class phpPayPal {
 				'period' 				=> 'PERIOD',
 				'buyer_id' 				=> 'BUYERID',
 				'closing_date' 			=> 'CLOSINGDATE',
-				'multiitem' 			=> 'MULTIITEM'
+				'multi_item' 			=> 'MULTIITEM'
 				)
 		,
 		'RefundTransaction' => array(
@@ -881,6 +917,27 @@ class phpPayPal {
 				'address_owner' 		=> 'ADDRESSOWNER',
 				'address_status' 		=> 'ADDRESSSTATUS',
 				'payer_status' 			=> 'PAYERSTATUS'
+				).
+		'DoReferenceTransaction' => array(
+				'avs_code' 				=> 'AVSCODE',
+				'cvv2_match' 			=> 'AVV2MATCH',
+				'billing_agreement_id'	=> 'BILLINGAGREEMENTID', // Should include filter IDs, but this will have to be done in the function level
+				'transaction_id'	 	=> 'TRANSACTIONID',
+				'transaction_type' 		=> 'TRANSACTIONTYPE',
+				'payment_type'		 	=> 'PAYMENTTYPE',
+				'order_time'		 	=> 'ORDERTIME',
+				'amount_total'		 	=> 'AMT',
+				'currency_code'			=> 'CURRENCYCODE',
+				'ammount_fee'			=> 'FEEAMT',
+				'amount_settle'			=> 'SETTLEAMT',
+				'amount_tax'			=> 'TAXAMT',
+				'exchange_rate'			=> 'EXCHANGERATE',
+				'payment_status'		=> 'PAYMENTSTATUS',
+				'pending_reason'		=> 'PENDINGREASON',
+				'reason_code'			=> 'REASONCODE',
+				'protection_eligibility'=> 'PROTECTIONELIGIBILITY',
+				'ebay_item_auction_transaction_id'	=> 'EBAYITEMAUCTIONTXNID',
+				'payment_error'			=> 'PAYMENTERROR'
 				)
 		);
 	
@@ -1828,6 +1885,154 @@ class phpPayPal {
 			return true;
 		}
 	}
+	
+	
+	
+	function update_recurring_payments_profile()
+		{
+			$this->urlencodeVariables();
+	
+			$nvpstr = $this->generateNVPString('UpdateRecurringPaymentsProfile');
+	
+			$this->urldecodeVariables();
+	
+			$this->Response = $this->hash_call("UpdateRecurringPaymentsProfile", $nvpstr);
+	
+			if(strtoupper($this->Response["ACK"]) != "SUCCESS")
+			{
+				$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+				$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+				$this->Error['ACK']				= $this->Response['ACK'];
+				$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+				$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+				$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+				$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+				$this->Error['VERSION']			= @$this->Response['VERSION'];
+				$this->Error['BUILD']			= @$this->Response['BUILD'];
+				
+				$this->_error				= true;
+				$this->_error_ack			= $this->Response['ACK'];
+				$this->ack					= 'Failure';
+				$this->_error_type			= 'paypal';
+				$this->_error_date			= $this->Response['TIMESTAMP'];
+				$this->_error_code			= $this->Response['L_ERRORCODE0'];
+				$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+				$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+				$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+				$this->_error_version		= @$this->Response['VERSION'];
+				$this->_error_build			= @$this->Response['BUILD']; 
+				
+				return false;
+			}
+			elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
+			{
+	
+				foreach($this->ResponseFieldsArray['UpdateRecurringPaymentsProfile'] as $key => $value)
+					$this->$key = $this->Response[$value];
+				
+				return true;
+			}
+		}
+	
+	
+	
+	public function do_reference_transaction()
+	{
+		// urlencode the needed variables
+		$this->urlencodeVariables();
+		
+		/* Construct the request string that will be sent to PayPal.
+		   The variable $nvpstr contains all the variables and is a
+		   name value pair string with & as a delimiter */
+		$nvpstr = $this->generateNVPString('DoReferenceTransaction');
+		
+		/* Construct and add any items found in this instance */
+		if(!empty($this->ItemsArray))
+		{
+			// Counter for the total of all the items put together
+			$total_items_amount = 0;
+			$total_items_tax_amount = 0;
+			// Go through the items array
+			foreach($this->ItemsArray as $key => $value)
+			{
+				// Get the array of the current item from the main array
+				$current_item = $this->ItemsArray[$key];
+				// Add it to the request string
+				$nvpstr .= "&L_NAME".$key."=".$current_item['name'].
+							"&L_NUMBER".$key."=".$current_item['number'].
+							"&L_QTY".$key."=".$current_item['quantity'].
+							"&L_TAXAMT".$key."=".$current_item['amount_tax'].
+							"&L_AMT".$key."=".$current_item['amount'];
+				// Add this item's amount to the total current count
+				$total_items_amount += ($current_item['amount'] * $current_item['quantity']);
+				$total_items_tax_amount += ($current_item['amount_tax'] * $current_item['quantity']);
+			}
+			// Set the amount_items for this instance and ITEMAMT added to the request string
+			$this->amount_items = $total_items_amount;
+			// Add this to our NVP string
+			$nvpstr .= "&ITEMAMT=".urlencode($total_items_amount);
+			// If our entire tax amount is not set, we will automatically set it based on the items tax amount
+			if($this->amount_tax == 0 OR empty($this->amount_tax))
+				$nvpstr .= "&TAXAMT=".urlencode($total_items_tax_amount);
+		}
+		
+		// decode the variables incase we still require access to them in our program
+		$this->urldecodeVariables();
+		
+		/* Make the API call to PayPal, using API signature.
+		   The API response is stored in an associative array called $this->Response */
+		$this->Response = $this->hash_call("DoReferenceTransaction", $nvpstr);
+		
+		// TODO: Add error handling for the hash_call
+		
+		/*
+		*************
+		if NO SUCCESS
+		*************
+		*/
+		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
+		{
+			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+			$this->Error['ACK']				= $this->Response['ACK'];
+			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+			$this->Error['VERSION']			= @$this->Response['VERSION'];
+			$this->Error['BUILD']			= @$this->Response['BUILD'];
+			
+			// TODO: Error codes for AVSCODE and CVV@MATCH
+			
+			$this->_error				= true;
+			$this->_error_ack			= $this->Response['ACK'];
+			$this->ack					= 'Failure';
+			$this->_error_type			= 'paypal';
+			$this->_error_date			= $this->Response['TIMESTAMP'];
+			$this->_error_code			= $this->Response['L_ERRORCODE0'];
+			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+			$this->_error_version		= @$this->Response['VERSION'];
+			$this->_error_build			= @$this->Response['BUILD']; 
+			
+			return false;
+		}
+		/*
+		*************
+		if SUCCESS
+		*************
+		*/
+		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
+		{
+			/* Take the response variables and put them into the local class variables */
+			foreach($this->ResponseFieldsArray['DoReferenceTransaction'] as $key => $value)
+				$this->$key = $this->Response[$value];
+			
+			return true;
+		}
+	}
+	
 
 	
 		
@@ -2142,7 +2347,3 @@ class phpPayPal {
 
 }  // END CLASS
 
-
-
-
-?>
