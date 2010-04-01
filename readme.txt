@@ -26,6 +26,7 @@ Version 0.85
 	- Changed "multiitem" to "multi_item"
 	- Some formatting updates
 	- Fixed misspelling of "profile_reference"
+	- Moved API credentials to the __construct()
 
 Version 0.8
 ---------------------
