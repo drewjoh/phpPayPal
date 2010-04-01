@@ -602,7 +602,7 @@ class phpPayPal {
 				),
 			'DoReferenceTransaction' => array(
 				'reference_id'				=> array('name' => 'REFERENCEID', 			'required' => 'yes'),
-				'payment_action'			=> array('name' => 'PAYMENTACTION', 		'required' => 'no'),
+				'payment_type'				=> array('name' => 'PAYMENTACTION', 		'required' => 'yes'),
 				'return_fmf_details'		=> array('name' => 'RETURNFMFDETAILS', 		'required' => 'no'),
 				'soft_descriptor'			=> array('name' => 'SOFTDESCRIPTOR', 		'required' => 'no'),
 				'ship_to_name'				=> array('name' => 'SHIPTONAME', 			'required' => 'no'),
@@ -926,7 +926,7 @@ class phpPayPal {
 	function __construct()
 	{
 		// SANDBOX SETTINGS
-		if($sandbox):
+		if($this->sandbox):
 			
 			private $API_USERNAME = 'sdk-three_api1.sdk.com';
 			private $API_PASSWORD = 'QFZCWN5HZM8VBG7Q';
@@ -944,7 +944,7 @@ class phpPayPal {
 			public $cancel_url = '';
 		
 		// LIVE SETTINGS
-		elseif($live):
+		elseif($this->live):
 			
 			private $API_USERNAME = '';
 			private $API_PASSWORD = '';
