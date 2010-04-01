@@ -30,45 +30,22 @@ class phpPayPal {
 	private $sandbox	= TRUE;
 	private $live		= FALSE;
 	
-	// SANDBOX SETTINGS
-	if($sandbox):
+		private $API_USERNAME = NULL;
+		private $API_PASSWORD = NULL;
+		private $API_SIGNATURE = NULL;
 		
-		private $API_USERNAME = 'sdk-three_api1.sdk.com';
-		private $API_PASSWORD = 'QFZCWN5HZM8VBG7Q';
-		private $API_SIGNATURE = 'A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU';
+		private $API_ENDPOINT = NULL;
 		
-		private $API_ENDPOINT = 'https://api-3t.sandbox.paypal.com/nvp';
+		private $USE_PROXY = NULL;
+		private $PROXY_HOST = NULL;
+		private $PROXY_PORT = NULL;
 		
-		private $USE_PROXY = FALSE;
-		private $PROXY_HOST = '127.0.0.1';
-		private $PROXY_PORT = '808';
+		private $PAYPAL_URL = NULL;
 		
-		private $PAYPAL_URL = 'https://www.sandbox.paypal.com/webscr&cmd=_express-checkout&token=';
+		public $return_url = NULL;
+		public $cancel_url = NULL;
 		
-		public $return_url = '';
-		public $cancel_url = '';
-	
-	// LIVE SETTINGS
-	elseif($live):
-		
-		private $API_USERNAME = '';
-		private $API_PASSWORD = '';
-		private $API_SIGNATURE = '';
-		
-		private $API_ENDPOINT = 'https://api-3t.paypal.com/nvp';
-		
-		private $USE_PROXY = FALSE;
-		private $PROXY_HOST = '127.0.0.1';
-		private $PROXY_PORT = '808';
-		
-		private $PAYPAL_URL = 'https://www.paypal.com/webscr&cmd=_express-checkout&token=';
-		
-		public $return_url = '';
-		public $cancel_url = '';
-		
-		private $VERSION = '3.0';
-		
-	endif;
+		public $VERSION = '3.0';
 	
 	
 	
@@ -948,7 +925,45 @@ class phpPayPal {
 	// CONSTRUCT
 	function __construct()
 	{
-		// You could set variable defaults here if you like
+		// SANDBOX SETTINGS
+		if($sandbox):
+			
+			private $API_USERNAME = 'sdk-three_api1.sdk.com';
+			private $API_PASSWORD = 'QFZCWN5HZM8VBG7Q';
+			private $API_SIGNATURE = 'A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU';
+			
+			private $API_ENDPOINT = 'https://api-3t.sandbox.paypal.com/nvp';
+			
+			private $USE_PROXY = FALSE;
+			private $PROXY_HOST = '127.0.0.1';
+			private $PROXY_PORT = '808';
+			
+			private $PAYPAL_URL = 'https://www.sandbox.paypal.com/webscr&cmd=_express-checkout&token=';
+			
+			public $return_url = '';
+			public $cancel_url = '';
+		
+		// LIVE SETTINGS
+		elseif($live):
+			
+			private $API_USERNAME = '';
+			private $API_PASSWORD = '';
+			private $API_SIGNATURE = '';
+			
+			private $API_ENDPOINT = 'https://api-3t.paypal.com/nvp';
+			
+			private $USE_PROXY = FALSE;
+			private $PROXY_HOST = '127.0.0.1';
+			private $PROXY_PORT = '808';
+			
+			private $PAYPAL_URL = 'https://www.paypal.com/webscr&cmd=_express-checkout&token=';
+			
+			public $return_url = '';
+			public $cancel_url = '';
+			
+			private $VERSION = '3.0';
+			
+		endif;
 	}	
 	
 	
