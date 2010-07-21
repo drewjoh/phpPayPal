@@ -581,7 +581,7 @@ class phpPayPal {
 				'trial_billing_frequnecy'	=> array('name' => 'TRIALBILLINGFREQUENCY', 'required' => 'no'),
 				'trial_total_cycles'		=> array('name' => 'TRIALTOTALBILLINGCYCLES', 'required' => 'no'),
 				'trial_amount'				=> array('name' => 'TRIALAMT', 				'required' => 'no'),
-				'currencey'					=> array('name' => 'CURRENCYCODE', 			'required' => 'yes'),
+				'currency'					=> array('name' => 'CURRENCYCODE', 			'required' => 'yes'),
 				'shipping_amount'			=> array('name' => 'SHIPPINGAMT', 			'required' => 'no'),
 				'tax_amount'				=> array('name' => 'TAXAMT', 				'required' => 'no'),
 				'credit_card_type'			=> array('name' => 'CREDITCARDTYPE', 		'required' => 'no'),
