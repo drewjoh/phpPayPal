@@ -1519,7 +1519,7 @@ class phpPayPal {
 			Take the response variables and put them into the local class variables
 			*/
 			foreach($this->ResponseFieldsArray['GetExpressCheckoutDetails'] as $key => $value)
-				$this->$key = $this->Response[$value];
+				$this->$key = @$this->Response[$value];
 			
 			return true;
 		}
@@ -1616,7 +1616,7 @@ class phpPayPal {
 			Take the response variables and put them into the local class variables
 			*/
 			foreach($this->ResponseFieldsArray['DoExpressCheckoutPayment'] as $key => $value)
-				$this->$key = $this->Response[$value];
+				$this->$key = @$this->Response[$value];
 			
 			return true;
 		}
