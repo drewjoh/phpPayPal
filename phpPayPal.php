@@ -30,15 +30,15 @@ class phpPayPal {
 	private $sandbox	= TRUE;
 	private $live		= FALSE;
 	
-		private $API_USERNAME = NULL;
-		private $API_PASSWORD = NULL;
-		private $API_SIGNATURE = NULL;
+		public $API_USERNAME = NULL;
+		public $API_PASSWORD = NULL;
+		public $API_SIGNATURE = NULL;
 		
 		private $API_ENDPOINT = NULL;
 		
-		private $USE_PROXY = NULL;
-		private $PROXY_HOST = NULL;
-		private $PROXY_PORT = NULL;
+		public $USE_PROXY = NULL;
+		public $PROXY_HOST = NULL;
+		public $PROXY_PORT = NULL;
 		
 		private $PAYPAL_URL = NULL;
 		
@@ -923,8 +923,13 @@ class phpPayPal {
 		
 	
 	// CONSTRUCT
-	function __construct()
+	function __construct($sandbox=false)
 	{
+		
+		$this->sandbox = $sandbox;
+		if ($sandbox) $this->live = false;
+		else $this->live = true;
+		
 		// SANDBOX SETTINGS
 		if($this->sandbox):
 			
@@ -954,7 +959,7 @@ class phpPayPal {
 			
 			$this->USE_PROXY = FALSE;
 			$this->PROXY_HOST = '127.0.0.1';
-			$this->PROXY_PORT = '808';
+			$this->PROXY_PORT = '8080';
 			
 			$this->PAYPAL_URL = 'https://www.paypal.com/webscr&cmd=_express-checkout&token=';
 			
