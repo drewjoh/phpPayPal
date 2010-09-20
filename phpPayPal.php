@@ -30,15 +30,15 @@ class phpPayPal {
 	private $sandbox	= TRUE;
 	private $live		= FALSE;
 	
-		private $API_USERNAME = NULL;
-		private $API_PASSWORD = NULL;
-		private $API_SIGNATURE = NULL;
+		public $API_USERNAME = NULL;
+		public $API_PASSWORD = NULL;
+		public $API_SIGNATURE = NULL;
 		
 		private $API_ENDPOINT = NULL;
 		
-		private $USE_PROXY = NULL;
-		private $PROXY_HOST = NULL;
-		private $PROXY_PORT = NULL;
+		public $USE_PROXY = NULL;
+		public $PROXY_HOST = NULL;
+		public $PROXY_PORT = NULL;
 		
 		private $PAYPAL_URL = NULL;
 		
@@ -894,7 +894,7 @@ class phpPayPal {
 				'address_owner' 		=> 'ADDRESSOWNER',
 				'address_status' 		=> 'ADDRESSSTATUS',
 				'payer_status' 			=> 'PAYERSTATUS'
-				).
+				),
 		'DoReferenceTransaction' => array(
 				'avs_code' 				=> 'AVSCODE',
 				'cvv2_match' 			=> 'AVV2MATCH',
@@ -923,45 +923,50 @@ class phpPayPal {
 		
 	
 	// CONSTRUCT
-	function __construct()
+	function __construct($sandbox=false)
 	{
+		
+		$this->sandbox = $sandbox;
+		if ($sandbox) $this->live = false;
+		else $this->live = true;
+		
 		// SANDBOX SETTINGS
 		if($this->sandbox):
 			
-			private $API_USERNAME = 'sdk-three_api1.sdk.com';
-			private $API_PASSWORD = 'QFZCWN5HZM8VBG7Q';
-			private $API_SIGNATURE = 'A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU';
+			$this->API_USERNAME = 'sdk-three_api1.sdk.com';
+			$this->API_PASSWORD = 'QFZCWN5HZM8VBG7Q';
+			$this->API_SIGNATURE = 'A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU';
 			
-			private $API_ENDPOINT = 'https://api-3t.sandbox.paypal.com/nvp';
+			$this->API_ENDPOINT = 'https://api-3t.sandbox.paypal.com/nvp';
 			
-			private $USE_PROXY = FALSE;
-			private $PROXY_HOST = '127.0.0.1';
-			private $PROXY_PORT = '808';
+			$this->USE_PROXY = FALSE;
+			$this->PROXY_HOST = '127.0.0.1';
+			$this->PROXY_PORT = '808';
 			
-			private $PAYPAL_URL = 'https://www.sandbox.paypal.com/webscr&cmd=_express-checkout&token=';
+			$this->PAYPAL_URL = 'https://www.sandbox.paypal.com/webscr&cmd=_express-checkout&token=';
 			
-			public $return_url = '';
-			public $cancel_url = '';
+			$this->return_url = '';
+			$this->cancel_url = '';
 		
 		// LIVE SETTINGS
 		elseif($this->live):
 			
-			private $API_USERNAME = '';
-			private $API_PASSWORD = '';
-			private $API_SIGNATURE = '';
+			$this->API_USERNAME = '';
+			$this->API_PASSWORD = '';
+			$this->API_SIGNATURE = '';
 			
-			private $API_ENDPOINT = 'https://api-3t.paypal.com/nvp';
+			$this->API_ENDPOINT = 'https://api-3t.paypal.com/nvp';
 			
-			private $USE_PROXY = FALSE;
-			private $PROXY_HOST = '127.0.0.1';
-			private $PROXY_PORT = '808';
+			$this->USE_PROXY = FALSE;
+			$this->PROXY_HOST = '127.0.0.1';
+			$this->PROXY_PORT = '8080';
 			
-			private $PAYPAL_URL = 'https://www.paypal.com/webscr&cmd=_express-checkout&token=';
+			$this->PAYPAL_URL = 'https://www.paypal.com/webscr&cmd=_express-checkout&token=';
 			
-			public $return_url = '';
-			public $cancel_url = '';
+			$this->return_url = '';
+			$this->cancel_url = '';
 			
-			private $VERSION = '3.0';
+			$this->VERSION = '3.0';
 			
 		endif;
 	}	
@@ -1514,7 +1519,7 @@ class phpPayPal {
 			Take the response variables and put them into the local class variables
 			*/
 			foreach($this->ResponseFieldsArray['GetExpressCheckoutDetails'] as $key => $value)
-				$this->$key = $this->Response[$value];
+				$this->$key = @$this->Response[$value];
 			
 			return true;
 		}
@@ -1611,7 +1616,7 @@ class phpPayPal {
 			Take the response variables and put them into the local class variables
 			*/
 			foreach($this->ResponseFieldsArray['DoExpressCheckoutPayment'] as $key => $value)
-				$this->$key = $this->Response[$value];
+				$this->$key = @$this->Response[$value];
 			
 			return true;
 		}
@@ -1900,56 +1905,6 @@ class phpPayPal {
 			return true;
 		}
 	}
-	
-	
-	
-	function update_recurring_payments_profile()
-		{
-			$this->urlencodeVariables();
-	
-			$nvpstr = $this->generateNVPString('UpdateRecurringPaymentsProfile');
-	
-			$this->urldecodeVariables();
-	
-			$this->Response = $this->hash_call("UpdateRecurringPaymentsProfile", $nvpstr);
-	
-			if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-			{
-				$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-				$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-				$this->Error['ACK']				= $this->Response['ACK'];
-				$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-				$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-				$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-				$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-				$this->Error['VERSION']			= @$this->Response['VERSION'];
-				$this->Error['BUILD']			= @$this->Response['BUILD'];
-				
-				$this->_error				= true;
-				$this->_error_ack			= $this->Response['ACK'];
-				$this->ack					= 'Failure';
-				$this->_error_type			= 'paypal';
-				$this->_error_date			= $this->Response['TIMESTAMP'];
-				$this->_error_code			= $this->Response['L_ERRORCODE0'];
-				$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-				$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-				$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-				$this->_error_version		= @$this->Response['VERSION'];
-				$this->_error_build			= @$this->Response['BUILD']; 
-				
-				return false;
-			}
-			elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-			{
-	
-				foreach($this->ResponseFieldsArray['UpdateRecurringPaymentsProfile'] as $key => $value)
-					$this->$key = $this->Response[$value];
-				
-				return true;
-			}
-		}
-	
-	
 	
 	public function do_reference_transaction()
 	{
