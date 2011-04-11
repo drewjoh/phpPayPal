@@ -30,25 +30,22 @@ class phpPayPal {
 	private $sandbox	= TRUE;
 	private $live		= FALSE;
 	
-		public $API_USERNAME = NULL;
-		public $API_PASSWORD = NULL;
-		public $API_SIGNATURE = NULL;
-		
-		private $API_ENDPOINT = NULL;
-		
-		public $USE_PROXY = NULL;
-		public $PROXY_HOST = NULL;
-		public $PROXY_PORT = NULL;
-		
-		private $PAYPAL_URL = NULL;
-		
-		public $return_url = NULL;
-		public $cancel_url = NULL;
-		
-		public $VERSION = '3.0';
+	public $API_USERNAME = NULL;
+	public $API_PASSWORD = NULL;
+	public $API_SIGNATURE = NULL;
 	
+	private $API_ENDPOINT = NULL;
 	
+	public $USE_PROXY = NULL;
+	public $PROXY_HOST = NULL;
+	public $PROXY_PORT = NULL;
 	
+	private $PAYPAL_URL = NULL;
+	
+	public $return_url = NULL;
+	public $cancel_url = NULL;
+	
+	public $VERSION = '53.0';
 	
 	// ----------------------------
 	// PUBLIC VARIABLES
@@ -168,6 +165,12 @@ class phpPayPal {
 	public $soft_descriptor; // SOFTDESCRIPTOR
 	public $transaction_entity; // TRANSACTIONENTITY
 	
+	// Recurring Payments
+	
+	public $profile_start_date;
+	public $billing_period;
+	public $billing_frequency;
+	public $billing_amount;
 	
 	 // Variables that are returned to us
 	
@@ -542,7 +545,7 @@ class phpPayPal {
 				'amount'		 			=> array('name' => 'AMT',					'required' => 'yes'),
 				'tax_amount' 				=> array('name' => 'TAXAMT',				'required' => 'no'),
 				'ship_amount' 				=> array('name' => 'SHIPPINGAMT',			'required' => 'no'),
-				'inital_amount' 			=> array('name' => 'INITAMT',				'required' => 'no'),
+				'initial_amount' 			=> array('name' => 'INITAMT',				'required' => 'no'),
 				'failed_inital_amount' 		=> array('name' => 'FAILEDINITAMTACTION',	'required' => 'no'),
 				'billing_total_cycles' 		=> array('name' => 'TOTALBILLINGCYCLES',	'required' => 'no'),
 				'trial_billing_period' 		=> array('name' => 'TRIALBILLINGPERIOD',	'required' => 'no'),
@@ -550,7 +553,7 @@ class phpPayPal {
 				'trial_amount' 				=> array('name' => 'TRIALAMT', 				'required' => 'no'),	
 				'trial_billing_cycle' 		=> array('name' => 'TRIALTOTALBILLINGCYCLES', 'required' => 'no'),				
 				'max_failed_attempts'  		=> array('name' => 'MAXFAILEDPAYMENTS', 	'required' => 'no'),
-				'auto_bill_amt'  			=> array('name' => 'AUTOBILLOUTAMT', 		'required' => 'no')
+				'auto_bill_amount'			=> array('name' => 'AUTOBILLOUTAMT', 		'required' => 'no')
 				),
 		'UpdateRecurringPaymentsProfile' => array(
 				'profile_id'				=> array('name' => 'PROFILEID', 			'required' => 'yes'),
@@ -599,6 +602,14 @@ class phpPayPal {
 				'country_code'				=> array('name' => 'COUNTRYCODE', 			'required' => 'yes'),
 				'postal_code'				=> array('name' => 'ZIP', 					'required' => 'yes'),
 				'phone_number'				=> array('name' => 'PHONENUM',				'required' => 'no')
+				),
+			'GetRecurringPaymentsProfileDetails' => array(
+				'profile_id'				=> array('name' => 'PROFILEID',				'required' => 'yes')
+				),
+			'ManageRecurringPaymentsProfileStatus' => array(
+				'profile_id'				=> array('name' => 'PROFILEID',				'required' => 'yes'),
+				'action'					=> array('name' => 'ACTION',				'required' => 'yes'),
+				'note'						=> array('name' => 'NOTE',					'required' => 'no')
 				),
 			'DoReferenceTransaction' => array(
 				'reference_id'				=> array('name' => 'REFERENCEID', 			'required' => 'yes'),
@@ -894,6 +905,9 @@ class phpPayPal {
 				'address_owner' 		=> 'ADDRESSOWNER',
 				'address_status' 		=> 'ADDRESSSTATUS',
 				'payer_status' 			=> 'PAYERSTATUS'
+				),
+		'ManageRecurringPaymentsProfileStatus' => array(
+				'profile_id' 			=> 'PROFILEID',
 				),
 		'DoReferenceTransaction' => array(
 				'avs_code' 				=> 'AVSCODE',
@@ -1906,6 +1920,52 @@ class phpPayPal {
 		}
 	}
 	
+	public function manage_recurring_payments_profile_status()
+	{
+		$this->urlencodeVariables();
+
+		$nvpstr = $this->generateNVPString('ManageRecurringPaymentsProfileStatus');
+
+		$this->urldecodeVariables();
+
+		$this->Response = $this->hash_call("ManageRecurringPaymentsProfileStatus", $nvpstr);
+
+		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
+		{
+			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+			$this->Error['ACK']				= $this->Response['ACK'];
+			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+			$this->Error['VERSION']			= @$this->Response['VERSION'];
+			$this->Error['BUILD']			= @$this->Response['BUILD'];
+			
+			$this->_error				= true;
+			$this->_error_ack			= $this->Response['ACK'];
+			$this->ack					= 'Failure';
+			$this->_error_type			= 'paypal';
+			$this->_error_date			= $this->Response['TIMESTAMP'];
+			$this->_error_code			= $this->Response['L_ERRORCODE0'];
+			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+			$this->_error_version		= @$this->Response['VERSION'];
+			$this->_error_build			= @$this->Response['BUILD']; 
+			
+			return false;
+		}
+		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
+		{
+
+			foreach($this->ResponseFieldsArray['ManageRecurringPaymentsProfileStatus'] as $key => $value)
+				$this->$key = $this->Response[$value];
+			
+			return true;
+		}
+	}
+		
 	public function do_reference_transaction()
 	{
 		// urlencode the needed variables
@@ -2228,7 +2288,8 @@ class phpPayPal {
 		$this->token		= urlencode($this->token);
 		$this->payer_id		= urlencode($this->payer_id);
 		
-
+		$this->description	= urlencode($this->description);
+		
 		if(!empty($this->ItemsArray))
 		{
 			// Go through the items array
@@ -2293,6 +2354,7 @@ class phpPayPal {
 		$this->token		= urldecode($this->token);
 		$this->payer_id		= urldecode($this->payer_id);
 		
+		$this->description	= urldecode($this->description);
 		
 		if(!empty($this->ItemsArray))
 		{
