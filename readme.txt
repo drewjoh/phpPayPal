@@ -1,45 +1,11 @@
-phpPayPal
+phpPayPal Class
 =======================
 
-PHP class to help make the interaction between your web app and PayPal easy.  Current supported functions are:
+For full documentation and information, please visit the Wiki at GitHub: "http://https://github.com/drewjoh/phpPayPal/wiki":https://github.com/drewjoh/phpPayPal/wiki
 
-    * DoDirectPayment
-    * SetExpressCheckout
-    * GetExpressCheckoutDetails
-    * DoExpressCheckoutPayment
-    * GetTransactionDetails
-    * RefundTransaction
-    * DoAuthorization
-    * DoCapture
-    * DoReauthorization
-    * DoVoid
-    * CreateRecurringPaymentsProfile
-    * GetRecurringPaymentsProfileDetails
-    * UpdateRecurringPaymentsProfile
-    * DoReferenceTransaction
+Until I'm moved fully to GibHub, older but more extensive documentation and examples can be found at: http://drewjoh.com/wiki/code/classes/phppaypal
+Those examples and code are a little outdated; but should still be helpful.
 
-
-Version 0.85
----------------------
-	- Added do_reference_transaction() function
-	- Changed "CL_ID" to "profile_reference" as it should have been.
-	- Changed "multiitem" to "multi_item"
-	- Some formatting updates
-	- Fixed misspelling of "profile_reference"
-	- Moved API credentials to the __construct()
-
-Version 0.8
----------------------
-	NOTE: v0.8 changed function names from ThisFormat() to this_format() to keep in line with common PHP programming techniques.  If your app was written for an earlier version, stick with v0.7, as they are currently identical except for the function name formatting.
-	
-Version 0.7
----------------------
-	- I changed $invoice to $invoice_number to be more consistent with PayPal terminology.  If you use this field, please be sure to update your code!
-	- expire_date is in MMYYYY format
-	- Added create_recurring_payments_profile() function
-	- Added update_recurring_payments_profile() function
-	- Added get_recurring_payments_profile_details() function
-	
-
+Created and grown over time by Drew Johnston, drewjoh.com. Please give credit where credit is due. :)
 
 Licensed under the Apache License, Version 2.0
