@@ -22,11 +22,6 @@
 
 class phpPayPal { 
 	
-	// ---------------------------
-	// PRIVATE VARIABLES
-	// ---------------------------
-	// NOTE: LIVE and SANDBOX variables are included.  Sandbox is enabled by default.
-	
 	private $sandbox		= true;
 	private $live			= false;
 	
@@ -936,56 +931,25 @@ class phpPayPal {
 		
 	
 	// CONSTRUCT
-	function __construct($config = null, $sandbox = false)
+	function __construct($config, $sandbox = false)
 	{
-		
-		$this->sandbox = $sandbox;
-		if ($sandbox) $this->live = false;
-		else $this->live = true;
-		
-		// SANDBOX SETTINGS
-		if($this->sandbox):
-			
-			$this->API_USERNAME = 'sdk-three_api1.sdk.com';
-			$this->API_PASSWORD = 'QFZCWN5HZM8VBG7Q';
-			$this->API_SIGNATURE = 'A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU';
-			
+		// Determine our API endpoint
+		if ($sandbox)
 			$this->API_ENDPOINT = 'https://api-3t.sandbox.paypal.com/nvp';
-			
-			$this->USE_PROXY = false;
-			$this->PROXY_HOST = '127.0.0.1';
-			$this->PROXY_PORT = '808';
-			
-			$this->PAYPAL_URL = 'https://www.sandbox.paypal.com/webscr&cmd=_express-checkout&token=';
-			
-			$this->return_url = '';
-			$this->cancel_url = '';
-		
-		// LIVE SETTINGS
-		elseif($this->live):
-			
-			$this->API_USERNAME = '';
-			$this->API_PASSWORD = '';
-			$this->API_SIGNATURE = '';
-			
+		else
 			$this->API_ENDPOINT = 'https://api-3t.paypal.com/nvp';
-			
-			$this->USE_PROXY = false;
-			$this->PROXY_HOST = '127.0.0.1';
-			$this->PROXY_PORT = '8080';
-			
-			$this->PAYPAL_URL = 'https://www.paypal.com/webscr&cmd=_express-checkout&token=';
-			
-			$this->return_url = '';
-			$this->cancel_url = '';
-			
-			$this->VERSION = '3.0';
-			
-		endif;
+		
+		$this->API_USERNAME		= $config['api_username'];
+		$this->API_PASSWORD		= $config['api_password'];
+		$this->API_SIGNATURE	= $config['api_signature'];
+		
+		$this->USE_PROXY		= $config['use_proxy'];
+		$this->PROXY_HOST		= $config['proxy_host'];
+		$this->PROXY_PORT		= $config['proxy_port'];
+		
+		$this->return_url		= $config['return_url'];
+		$this->cancel_url		= $config['cancel_url'];
 	}	
-	
-	
-	
 	
 	public function do_capture()
 	{
@@ -1008,10 +972,6 @@ class phpPayPal {
 		return $this->format_response();
 	}
 	
-	
-	
-	
-	
 	public function do_authorization()
 	{
 		// urlencode the needed variables
@@ -1032,11 +992,7 @@ class phpPayPal {
 		// Format our response and return the outcome
 		return $this->format_response();
 	}
-
-
-
-
-
+	
 	public function do_reauthorization()
 	{
 		// urlencode the needed variables
@@ -1057,11 +1013,7 @@ class phpPayPal {
 		// Format our response and return the outcome
 		return $this->format_response();
 	}
-
-
-
-
-
+	
 	public function do_void()
 	{
 		// urlencode the needed variables
@@ -1082,11 +1034,6 @@ class phpPayPal {
 		// Format our response and return the outcome
 		return $this->format_response();
 	}
-
-	
-	
-	
-	
 	
 	public function do_direct_payment()
 	{
@@ -1139,11 +1086,7 @@ class phpPayPal {
 		return $this->format_response();
 	}
 	
-	
-	
-	
-	
-	function set_express_checkout()
+	public function set_express_checkout()
 	{
 		// TODO: Add error handling prior to trying to make PayPal calls. ie: missing amount_total or RETURN_URL
 		
@@ -1170,7 +1113,7 @@ class phpPayPal {
 		return $this->format_response();
 	}
 	
-	function set_express_checkout_successful_redirect()
+	public function set_express_checkout_successful_redirect()
 	{
 		// Redirect to paypal.com here
 		$token = urlencode($this->Response["TOKEN"]);
@@ -1178,10 +1121,7 @@ class phpPayPal {
 		header("Location: ".$paypal_url);
 	}
 	
-	
-	
-	
-	function get_express_checkout_details()
+	public function get_express_checkout_details()
 	{
 		// TODO: Add error handling prior to PayPal calls. ie: missing TOKEN
 		
@@ -1212,10 +1152,7 @@ class phpPayPal {
 		return $this->format_response();
 	}
 	
-	
-	
-	
-	function do_express_checkout_payment()
+	public function do_express_checkout_payment()
 	{
 		// urlencode the needed variables
 		$this->urlencodeVariables();
@@ -1262,10 +1199,7 @@ class phpPayPal {
 		return $this->format_response();
 	}
 	
-	
-	
-	
-	function get_transaction_details()
+	public function get_transaction_details()
 	{
 		/* Construct the parameter string that describes the PayPal payment
 			the varialbes were set in the web form, and the resulting string
@@ -1281,10 +1215,7 @@ class phpPayPal {
 		return $this->format_response();
 	}
 	
-	
-	
-	
-	function refund_transaction()
+	public function refund_transaction()
 	{
 		/* Construct the parameter string that describes the PayPal payment
 			the varialbes were set in the web form, and the resulting string
@@ -1300,9 +1231,7 @@ class phpPayPal {
 		return $this->format_response();
 	}
 	
-	
-	
-	function create_recurring_payments_profile()
+	public function create_recurring_payments_profile()
 	{
 
 		$this->urlencodeVariables();
@@ -1317,9 +1246,7 @@ class phpPayPal {
 		return $this->format_response();
 	}
 	
-	
-	
-	function get_recurring_payments_profile_details()
+	public function get_recurring_payments_profile_details()
 	{
 
 		$nvpstr = $this->generateNVPString('GetRecurringPaymentsProfileDetails');
@@ -1330,9 +1257,7 @@ class phpPayPal {
 		return $this->format_response();
 	}
 	
-	
-	
-	function update_recurring_payments_profile()
+	public function update_recurring_payments_profile()
 	{
 		$this->urlencodeVariables();
 
@@ -1411,9 +1336,6 @@ class phpPayPal {
 		return $this->format_response();
 	}
 	
-
-	
-		
 	/**
 	  * hash_call: Function to perform the API call to PayPal using API signature
 	  * @methodName is name of API  method.
@@ -1490,9 +1412,7 @@ class phpPayPal {
 		
 		return $nvpResArray;
 	}
-		
-		
-		
+	
 	/** This function will take NVPString and convert it to an Associative Array and it will decode the response.
 	  * It is usefull to search for a particular key and displaying arrays.
 	  * @nvpstr is NVPString.
@@ -1520,16 +1440,12 @@ class phpPayPal {
 			
 		return $nvpArray;
 	}
-		
 	
 	// Clear our items array to make way for another transaction
 	public function clear_items()
 	{
 		$this->ItemsArray = NULL;
 	}
-	
-		
-	
 		
 	/* This function will add an item to the itemArray for use in doDirectPayment and doExpressCheckoutPayment */
 	public function add_item($name, $number, $quantity, $amount_tax, $amount)
@@ -1545,8 +1461,6 @@ class phpPayPal {
 		
 		// TODO: Should recalculate and set $this->amount_items after every new item is added. Or is this done on each request?
 	}
-	
-	
 	
 	private function get_items($passed_response)
 	{
@@ -1582,8 +1496,6 @@ class phpPayPal {
 		} // end if
 	} // end function
 	
-	
-	
 	private function generateNVPString($type)
 	{
 		$temp_nvp_str = '';
@@ -1598,8 +1510,6 @@ class phpPayPal {
 		}
 		return $temp_nvp_str;
 	}
-	
-	
 	
 	/* This function encodes all applicable variables for transport to PayPal */
 	private function urlencodeVariables()
@@ -1732,7 +1642,6 @@ class phpPayPal {
 			}
 		}
 	}
-	
 	
 	// We take our response and depending on whether it's a success or failure, set our values accordingly
 	private function format_response()
