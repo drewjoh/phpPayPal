@@ -27,25 +27,24 @@ class phpPayPal {
 	// ---------------------------
 	// NOTE: LIVE and SANDBOX variables are included.  Sandbox is enabled by default.
 	
-	private $sandbox	= TRUE;
-	private $live		= FALSE;
+	private $sandbox		= true;
+	private $live			= false;
 	
-	public $API_USERNAME = NULL;
-	public $API_PASSWORD = NULL;
-	public $API_SIGNATURE = NULL;
+	private $API_ENDPOINT	= null;
+	private $PAYPAL_URL		= null;
 	
-	private $API_ENDPOINT = NULL;
+	public $API_USERNAME	= null;
+	public $API_PASSWORD	= null;
+	public $API_SIGNATURE	= null;
 	
-	public $USE_PROXY = NULL;
-	public $PROXY_HOST = NULL;
-	public $PROXY_PORT = NULL;
+	public $USE_PROXY		= null;
+	public $PROXY_HOST		= null;
+	public $PROXY_PORT		= null;
 	
-	private $PAYPAL_URL = NULL;
+	public $return_url		= null;
+	public $cancel_url		= null;
 	
-	public $return_url = NULL;
-	public $cancel_url = NULL;
-	
-	public $VERSION = '53.0';
+	public $VERSION			= '53.0';
 	
 	// ----------------------------
 	// PUBLIC VARIABLES
@@ -937,7 +936,7 @@ class phpPayPal {
 		
 	
 	// CONSTRUCT
-	function __construct($sandbox=false)
+	function __construct($config = null, $sandbox = false)
 	{
 		
 		$this->sandbox = $sandbox;
@@ -953,7 +952,7 @@ class phpPayPal {
 			
 			$this->API_ENDPOINT = 'https://api-3t.sandbox.paypal.com/nvp';
 			
-			$this->USE_PROXY = FALSE;
+			$this->USE_PROXY = false;
 			$this->PROXY_HOST = '127.0.0.1';
 			$this->PROXY_PORT = '808';
 			
@@ -971,7 +970,7 @@ class phpPayPal {
 			
 			$this->API_ENDPOINT = 'https://api-3t.paypal.com/nvp';
 			
-			$this->USE_PROXY = FALSE;
+			$this->USE_PROXY = false;
 			$this->PROXY_HOST = '127.0.0.1';
 			$this->PROXY_PORT = '8080';
 			
@@ -1005,54 +1004,8 @@ class phpPayPal {
 		   The API response is stored in an associative array called $this->Response */
 		$this->Response = $this->hash_call("DoCapture", $nvpstr);
 		
-		// TODO: Add error handling for the hash_call
-		
-		/*
-		*************
-		if NO SUCCESS
-		*************
-		*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			// TODO: Error codes for AVSCODE and CVV@MATCH
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		/*
-		*************
-		if SUCCESS
-		*************
-		*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-		{
-			/* Take the response variables and put them into the local class variables */
-			foreach($this->ResponseFieldsArray['DoCapture'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 	
@@ -1076,54 +1029,8 @@ class phpPayPal {
 		   The API response is stored in an associative array called $this->Response */
 		$this->Response = $this->hash_call("DoAuthorization", $nvpstr);
 		
-		// TODO: Add error handling for the hash_call
-		
-		/*
-		*************
-		if NO SUCCESS
-		*************
-		*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			// TODO: Error codes for AVSCODE and CVV@MATCH
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		/*
-		*************
-		if SUCCESS
-		*************
-		*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-		{
-			/* Take the response variables and put them into the local class variables */
-			foreach($this->ResponseFieldsArray['DoAuthorization'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 
 
@@ -1147,54 +1054,8 @@ class phpPayPal {
 		   The API response is stored in an associative array called $this->Response */
 		$this->Response = $this->hash_call("DoReauthorization", $nvpstr);
 		
-		// TODO: Add error handling for the hash_call
-		
-		/*
-		*************
-		if NO SUCCESS
-		*************
-		*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			// TODO: Error codes for AVSCODE and CVV@MATCH
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		/*
-		*************
-		if SUCCESS
-		*************
-		*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-		{
-			/* Take the response variables and put them into the local class variables */
-			foreach($this->ResponseFieldsArray['DoReauthorization'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 
 
@@ -1218,54 +1079,8 @@ class phpPayPal {
 		   The API response is stored in an associative array called $this->Response */
 		$this->Response = $this->hash_call("DoVoid", $nvpstr);
 		
-		// TODO: Add error handling for the hash_call
-		
-		/*
-		*************
-		if NO SUCCESS
-		*************
-		*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			// TODO: Error codes for AVSCODE and CVV@MATCH
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		/*
-		*************
-		if SUCCESS
-		*************
-		*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-		{
-			/* Take the response variables and put them into the local class variables */
-			foreach($this->ResponseFieldsArray['DoVoid'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 
 	
@@ -1320,54 +1135,8 @@ class phpPayPal {
 		   The API response is stored in an associative array called $this->Response */
 		$this->Response = $this->hash_call("DoDirectPayment", $nvpstr);
 		
-		// TODO: Add error handling for the hash_call
-		
-		/*
-		*************
-		if NO SUCCESS
-		*************
-		*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			// TODO: Error codes for AVSCODE and CVV@MATCH
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		/*
-		*************
-		if SUCCESS
-		*************
-		*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-		{
-			/* Take the response variables and put them into the local class variables */
-			foreach($this->ResponseFieldsArray['DoDirectPayment'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 	
@@ -1397,59 +1166,8 @@ class phpPayPal {
 			*/
 		$this->Response = $this->hash_call("SetExpressCheckout", $nvpstr);
 		
-		/* Display the API response back to the browser.
-		   If the response from PayPal was a success, display the response parameters'
-		   If the response was an error, display the errors received using APIError.php.
-		   */		
-		/*
-		*************
-		if NO SUCCESS
-		*************
-		*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-			/*
-			$_SESSION['reshash']=$this->Response;
-			$location = "APIError.php";
-			header("Location: $location");
-			*/
-		}
-		/*
-		*************
-		if SUCCESS
-		*************
-		*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-		{
-			/* Take the response variables and put them into the local class variables */
-			foreach($this->ResponseFieldsArray['SetExpressCheckout'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 	function set_express_checkout_successful_redirect()
@@ -1490,54 +1208,8 @@ class phpPayPal {
 			*/
 		$this->Response = $this->hash_call("GetExpressCheckoutDetails", $nvpstr);
 		
-		/*
-		*************
-		if NO SUCCESS
-		*************
-		*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		/*
-		***********
-		if SUCCESS
-		***********
-		*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-		{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
-			foreach($this->ResponseFieldsArray['GetExpressCheckoutDetails'] as $key => $value)
-				$this->$key = @$this->Response[$value];
-			
-			return true;
-		}
-		
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 	
@@ -1545,8 +1217,6 @@ class phpPayPal {
 	
 	function do_express_checkout_payment()
 	{
-		// TODO: Error checking. ie: we require a token and payer_id here
-		
 		// urlencode the needed variables
 		$this->urlencodeVariables();
 		
@@ -1588,52 +1258,8 @@ class phpPayPal {
 		// decode the variables incase we still require access to them in our program
 		$this->urldecodeVariables();
 		
-		/*
-			*************
-			if NO SUCCESS
-			*************
-			*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		/*
-			*************
-			if SUCCESS
-			*************
-			*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-		{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
-			foreach($this->ResponseFieldsArray['DoExpressCheckoutPayment'] as $key => $value)
-				$this->$key = @$this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 	
@@ -1651,56 +1277,8 @@ class phpPayPal {
 		   The API response is stored in an associative array called $resArray */
 		$this->Response = $this->hash_call("GetTransactionDetails", $nvpstr);
 		
-		/* Next, collect the API request in the associative array $reqArray
-		   as well to display back to the browser.
-		   Normally you wouldnt not need to do this, but its shown for testing */
-		
-		/*
-			*************
-			if NO SUCCESS
-			*************
-			*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-			/*
-			*************
-			if SUCCESS
-			*************
-			*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-		{
-			/* Take the response variables and put them into the local class variables */
-			foreach($this->ResponseFieldsArray['GetTransactionDetails'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			$this->getItems($this->Response);
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 	
@@ -1718,56 +1296,8 @@ class phpPayPal {
 		   The API response is stored in an associative array called $resArray */
 		$this->Response = $this->hash_call("RefundTransaction", $nvpstr);
 		
-		/* Next, collect the API request in the associative array $reqArray
-		   as well to display back to the browser.
-		   Normally you wouldnt not need to do this, but its shown for testing */
-		
-		/*
-			*************
-			if NO SUCCESS
-			*************
-			*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		/*
-			*************
-			if SUCCESS
-			*************
-			*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-		{
-			/* Take the response variables and put them into the local class variables */
-			foreach($this->ResponseFieldsArray['RefundTransaction'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			$this->getItems($this->Response);
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 	
@@ -1783,44 +1313,8 @@ class phpPayPal {
 
 		$this->urldecodeVariables();
 
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-	
-		}
-	
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-		{
-			/*
-			Take the response variables and put them into the local class variables
-			*/
-			foreach($this->ResponseFieldsArray['CreateRecurringPaymentsProfile'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 	
@@ -1832,44 +1326,8 @@ class phpPayPal {
 
 		$this->Response = $this->hash_call("GetRecurringPaymentsProfileDetails", $nvpstr);
 
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-
-		}
-
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-		{
-
-			foreach($this->ResponseFieldsArray['GetRecurringPaymentsProfileDetails'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			$this->getItems($this->Response);
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 	
@@ -1884,40 +1342,8 @@ class phpPayPal {
 
 		$this->Response = $this->hash_call("UpdateRecurringPaymentsProfile", $nvpstr);
 
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-		{
-
-			foreach($this->ResponseFieldsArray['UpdateRecurringPaymentsProfile'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 	public function manage_recurring_payments_profile_status()
@@ -1930,40 +1356,8 @@ class phpPayPal {
 
 		$this->Response = $this->hash_call("ManageRecurringPaymentsProfileStatus", $nvpstr);
 
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS')
-		{
-
-			foreach($this->ResponseFieldsArray['ManageRecurringPaymentsProfileStatus'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 		
 	public function do_reference_transaction()
@@ -2013,54 +1407,8 @@ class phpPayPal {
 		   The API response is stored in an associative array called $this->Response */
 		$this->Response = $this->hash_call("DoReferenceTransaction", $nvpstr);
 		
-		// TODO: Add error handling for the hash_call
-		
-		/*
-		*************
-		if NO SUCCESS
-		*************
-		*/
-		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
-		{
-			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
-			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
-			$this->Error['ACK']				= $this->Response['ACK'];
-			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
-			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
-			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
-			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
-			$this->Error['VERSION']			= @$this->Response['VERSION'];
-			$this->Error['BUILD']			= @$this->Response['BUILD'];
-			
-			// TODO: Error codes for AVSCODE and CVV@MATCH
-			
-			$this->_error				= true;
-			$this->_error_ack			= $this->Response['ACK'];
-			$this->ack					= 'Failure';
-			$this->_error_type			= 'paypal';
-			$this->_error_date			= $this->Response['TIMESTAMP'];
-			$this->_error_code			= $this->Response['L_ERRORCODE0'];
-			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
-			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
-			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
-			$this->_error_version		= @$this->Response['VERSION'];
-			$this->_error_build			= @$this->Response['BUILD']; 
-			
-			return false;
-		}
-		/*
-		*************
-		if SUCCESS
-		*************
-		*/
-		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
-		{
-			/* Take the response variables and put them into the local class variables */
-			foreach($this->ResponseFieldsArray['DoReferenceTransaction'] as $key => $value)
-				$this->$key = $this->Response[$value];
-			
-			return true;
-		}
+		// Format our response and return the outcome
+		return $this->format_response();
 	}
 	
 
@@ -2074,18 +1422,20 @@ class phpPayPal {
 	*/
 	private function hash_call($methodName, $nvpStr)
 	{
+		// TODO: Add error handling for the hash_call
+		
 		//setting the curl parameters.
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL,$this->API_ENDPOINT);
 		curl_setopt($ch, CURLOPT_VERBOSE, 1);
 	
 		//turning off the server and peer verification(TrustManager Concept).
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 	
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
 		curl_setopt($ch, CURLOPT_POST, 1);
-		//if USE_PROXY constant set to TRUE in Constants.php, then only proxy will be enabled.
+		//if USE_PROXY constant set to true in Constants.php, then only proxy will be enabled.
 	   //Set proxy name to PROXY_HOST and port number to PROXY_PORT in constants.php 
 		if($this->USE_PROXY)
 			curl_setopt ($ch, CURLOPT_PROXY, $this->PROXY_HOST.":".$this->PROXY_PORT); 
@@ -2171,11 +1521,18 @@ class phpPayPal {
 		return $nvpArray;
 	}
 		
+	
+	// Clear our items array to make way for another transaction
+	public function clear_items()
+	{
+		$this->ItemsArray = NULL;
+	}
+	
 		
-		
+	
 		
 	/* This function will add an item to the itemArray for use in doDirectPayment and doExpressCheckoutPayment */
-	public function addItem($name, $number, $quantity, $amount_tax, $amount)
+	public function add_item($name, $number, $quantity, $amount_tax, $amount)
 	{
 		$new_item =  array(
 				'name' => $name, 
@@ -2191,7 +1548,7 @@ class phpPayPal {
 	
 	
 	
-	private function getItems($passed_response)
+	private function get_items($passed_response)
 	{
 		// Clear any current items
 		$this->ItemsArray = '';
@@ -2375,7 +1732,53 @@ class phpPayPal {
 			}
 		}
 	}
-
+	
+	
+	// We take our response and depending on whether it's a success or failure, set our values accordingly
+	private function format_response()
+	{
+		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
+		{
+			$this->Error['TIMESTAMP']		= @$this->Response['TIMESTAMP'];
+			$this->Error['CORRELATIONID']	= @$this->Response['CORRELATIONID'];
+			$this->Error['ACK']				= $this->Response['ACK'];
+			$this->Error['ERRORCODE']		= $this->Response['L_ERRORCODE0'];
+			$this->Error['SHORTMESSAGE']	= $this->Response['L_SHORTMESSAGE0'];
+			$this->Error['LONGMESSAGE']		= $this->Response['L_LONGMESSAGE0'];
+			$this->Error['SEVERITYCODE']	= $this->Response['L_SEVERITYCODE0'];
+			$this->Error['VERSION']			= @$this->Response['VERSION'];
+			$this->Error['BUILD']			= @$this->Response['BUILD'];
+			
+			// TODO: Error codes for AVSCODE and CVV@MATCH
+			
+			$this->_error				= true;
+			$this->_error_ack			= $this->Response['ACK'];
+			$this->ack					= 'Failure';
+			$this->_error_type			= 'paypal';
+			$this->_error_date			= $this->Response['TIMESTAMP'];
+			$this->_error_code			= $this->Response['L_ERRORCODE0'];
+			$this->_error_short_message	= $this->Response['L_SHORTMESSAGE0'];
+			$this->_error_long_message	= $this->Response['L_LONGMESSAGE0'];
+			$this->_error_severity_code	= $this->Response['L_SEVERITYCODE0'];
+			$this->_error_version		= @$this->Response['VERSION'];
+			$this->_error_build			= @$this->Response['BUILD']; 
+			
+			return false;
+		}
+		/*
+		*************
+		if SUCCESS
+		*************
+		*/
+		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
+		{
+			/* Take the response variables and put them into the local class variables */
+			foreach($this->ResponseFieldsArray['DoReferenceTransaction'] as $key => $value)
+				$this->$key = $this->Response[$value];
+			
+			return true;
+		}
+	}
 
 }  // END CLASS
 
