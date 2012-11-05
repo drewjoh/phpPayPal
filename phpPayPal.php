@@ -844,7 +844,7 @@ class phpPayPal {
 				'max_failed_payments' 	=> 'MAXFAILEDPAYMENTS',
 				'subcriber_name' 		=> 'SUBSCRIBERNAME',
 				'profile_start_date' 	=> 'PROFILESTARTDATE',
-				'nest_billing_date' 	=> 'NEXTBILLINGDATE',
+				'next_billing_date' 	=> 'NEXTBILLINGDATE',
 				'num_cycles_completed' 	=> 'NUMCYCLESCOMPLETED',
 				'num_cycles_remaining' 	=> 'NUMCYCLESREMAINING',
 				'outstanding_balance' 	=> 'OUTSTANDINGBALANCE',
