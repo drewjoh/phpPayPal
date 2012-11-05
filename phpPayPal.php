@@ -905,7 +905,7 @@ class phpPayPal {
 				),
 		'DoReferenceTransaction' => array(
 				'avs_code' 				=> 'AVSCODE',
-				'cvv2_match' 			=> 'AVV2MATCH',
+				'cvv2_match' 			=> 'CVV2MATCH',
 				'billing_agreement_id'	=> 'BILLINGAGREEMENTID', // Should include filter IDs, but this will have to be done in the function level
 				'transaction_id'	 	=> 'TRANSACTIONID',
 				'transaction_type' 		=> 'TRANSACTIONTYPE',
