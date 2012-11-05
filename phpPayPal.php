@@ -969,7 +969,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("DoCapture", $nvpstr);
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('DoCapture');
 	}
 	
 	public function do_authorization()
@@ -990,7 +990,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("DoAuthorization", $nvpstr);
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('DoAuthorization');
 	}
 	
 	public function do_reauthorization()
@@ -1011,7 +1011,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("DoReauthorization", $nvpstr);
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('DoReauthorization');
 	}
 	
 	public function do_void()
@@ -1032,7 +1032,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("DoVoid", $nvpstr);
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('DoVoid');
 	}
 	
 	public function do_direct_payment()
@@ -1083,7 +1083,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("DoDirectPayment", $nvpstr);
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('DoDirectPayment');
 	}
 	
 	public function set_express_checkout()
@@ -1110,7 +1110,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("SetExpressCheckout", $nvpstr);
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('SetExpressCheckout');
 	}
 	
 	public function set_express_checkout_successful_redirect()
@@ -1149,7 +1149,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("GetExpressCheckoutDetails", $nvpstr);
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('GetExpressCheckoutDetails');
 	}
 	
 	public function do_express_checkout_payment()
@@ -1196,7 +1196,7 @@ class phpPayPal {
 		$this->urldecodeVariables();
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('DoExpressCheckoutPayment');
 	}
 	
 	public function get_transaction_details()
@@ -1212,7 +1212,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("GetTransactionDetails", $nvpstr);
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('GetTransactionDetails');
 	}
 	
 	public function refund_transaction()
@@ -1228,7 +1228,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("RefundTransaction", $nvpstr);
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('RefundTransaction');
 	}
 	
 	public function create_recurring_payments_profile()
@@ -1243,7 +1243,7 @@ class phpPayPal {
 		$this->urldecodeVariables();
 
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('CreateRecurringPaymentsProfile');
 	}
 	
 	public function get_recurring_payments_profile_details()
@@ -1254,7 +1254,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("GetRecurringPaymentsProfileDetails", $nvpstr);
 
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('GetRecurringPaymentsProfileDetails');
 	}
 	
 	public function update_recurring_payments_profile()
@@ -1268,7 +1268,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("UpdateRecurringPaymentsProfile", $nvpstr);
 
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('UpdateRecurringPaymentsProfile');
 	}
 	
 	public function manage_recurring_payments_profile_status()
@@ -1282,7 +1282,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("ManageRecurringPaymentsProfileStatus", $nvpstr);
 
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('ManageRecurringPaymentsProfileStatus');
 	}
 		
 	public function do_reference_transaction()
@@ -1333,7 +1333,7 @@ class phpPayPal {
 		$this->Response = $this->hash_call("DoReferenceTransaction", $nvpstr);
 		
 		// Format our response and return the outcome
-		return $this->format_response();
+		return $this->format_response('DoReferenceTransaction');
 	}
 	
 	/**
@@ -1644,7 +1644,7 @@ class phpPayPal {
 	}
 	
 	// We take our response and depending on whether it's a success or failure, set our values accordingly
-	private function format_response()
+	private function format_response($response_type)
 	{
 		if(strtoupper($this->Response["ACK"]) != "SUCCESS" AND strtoupper($this->Response["ACK"]) != "SUCCESSWITHWARNING")
 		{
@@ -1682,7 +1682,7 @@ class phpPayPal {
 		elseif(strtoupper($this->Response["ACK"]) == 'SUCCESS' OR strtoupper($this->Response["ACK"]) == 'SUCCESSWITHWARNING')
 		{
 			/* Take the response variables and put them into the local class variables */
-			foreach($this->ResponseFieldsArray['DoReferenceTransaction'] as $key => $value)
+			foreach($this->ResponseFieldsArray[$response_type] as $key => $value)
 				$this->$key = $this->Response[$value];
 			
 			return true;
