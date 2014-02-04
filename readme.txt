@@ -9,3 +9,5 @@ Those examples and code are a little outdated; but should still be helpful.
 Created and grown over time by Drew Johnston, drewjoh.com. Please give credit where credit is due. :)
 
 Licensed under the Apache License, Version 2.0
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/drewjoh/phppaypal/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
