@@ -1,5 +1,4 @@
 <?php
-
 /*
 	Created by Drew Johnston, 2007, drewjoh.com
 	
@@ -227,6 +226,12 @@ class phpPayPal {
 	*/
 	public $ItemsArray;
 	
+	/*
+		This is the Mass Pay array, contains KEY => VALUE pairs for NAME => VALUE of mass pay where NAME = name of mass pay variable
+		Names include: email, amount, unique_id, note
+	*/
+	public $MassPayArray;
+	
 	
 	/*	-----------------------
 		COUNTRY NAMES & CODES
@@ -365,6 +370,7 @@ class phpPayPal {
 	*/
 	
 	public $RequestFieldsArray = array(
+		'MassPay' => array(),
 		'DoCapture' => array(
 				'authorization_id' 			=> array('name' =>'AUTHORIZATIONID',		'required' => 'yes'),
 				'amount' 					=> array('name' =>'AMT',					'required' => 'yes'),
@@ -683,6 +689,13 @@ class phpPayPal {
 		'DoVoid' => array(
 				'authorization_id' 		=> 'AUTHORIZATIONID'
 				),
+		'MassPay' => array(
+				'timestamp' 			=> 'TIMESTAMP',
+				'correlation_id' 		=> 'CORRELATIONID',
+				'ack' 					=> 'ACK',
+				'version' 				=> 'VERSION',
+				'build' 				=> 'BUILD',
+				),
 		'DoDirectPayment' => array(
 				'timestamp' 			=> 'TIMESTAMP',
 				'correlation_id' 		=> 'CORRELATIONID',
@@ -949,7 +962,46 @@ class phpPayPal {
 		
 		$this->return_url		= $config['return_url'];
 		$this->cancel_url		= $config['cancel_url'];
-	}	
+	}
+	
+	public function mass_pay()
+	{
+		// urelncode the needed variables
+		$this->urlencodeVariables();
+		
+		/* Construct the request string that will be sent to PayPal.
+		   The variable $nvpstr contains all the variables and is a
+		   name value pair string with & as a delimiter */
+		$nvpstr = $this->generateNVPString('MassPay');
+		
+		// Add Additional Headers
+		$nvpstr .= '&receiverType=EmailAddress&EMAILSUBJECT='.urlencode('Affiliate Funds Release');
+		
+		// Go through the mass pay array
+		foreach($this->MassPayArray as $key => $value)
+		{
+			// Get the array of the current item from the main array
+			$current_item = $this->MassPayArray[$key];
+			// Add it to the request string
+			$nvpstr .= "&L_EMAIL".$key."=".$current_item['email'].
+						"&L_Amt".$key."=".$current_item['amount'];
+			if(!empty($current_item['unique_id'])){
+				$nvpstr .= "&L_UNIQUEID".$key."=".$current_item['unique_id'];
+			}
+			if(!empty($current_item['note'])){
+				$nvpstr .= "&L_NOTE".$key."=".$current_item['note'];
+			}
+		}
+		// decode the variables incase we still require access to them in our program
+		$this->urldecodeVariables();
+		
+		/* Make the API call to PayPal, using API signature.
+		   The API response is stored in an associative array called $this->Response */
+		$this->Response = $this->hash_call("MassPay", $nvpstr);
+		
+		// Format our response and return the outcome
+		return $this->format_response('MassPay');
+	}
 	
 	public function do_capture()
 	{
@@ -1441,6 +1493,22 @@ class phpPayPal {
 		return $nvpArray;
 	}
 	
+	public function clear_mass_pay()
+	{
+		$this->MassPayArray = NULL;
+	}
+	
+	public function add_mass_pay($email, $amount, $unique_id, $note)
+	{
+		$new_mass_pay =  array(
+				'email' => $email, 
+				'amount' => $amount, 
+				'unique_id' => $unique_id, 
+				'note' => $note);
+		
+		$this->MassPayArray[] = $new_mass_pay;
+	}
+	
 	// Clear our items array to make way for another transaction
 	public function clear_items()
 	{
@@ -1499,14 +1567,17 @@ class phpPayPal {
 	private function generateNVPString($type)
 	{
 		$temp_nvp_str = '';
+		
 		// Go through the selected RequestFieldsArray and create the request string based on whether the field is required or filled
 		// TODO: return error if required field is empty?
-		foreach($this->RequestFieldsArray[$type] as $key => $value)
-		{
-			if($value['required'] == 'yes')
-				$temp_nvp_str .= '&'.$value['name'].'='.$this->$key;
-			elseif(!empty($this->$key))
-				$temp_nvp_str .= '&'.$value['name'].'='.$this->$key;
+		if(count($this->RequestFieldsArray[$type])>0){
+			foreach($this->RequestFieldsArray[$type] as $key => $value)
+			{
+				if($value['required'] == 'yes')
+					$temp_nvp_str .= '&'.$value['name'].'='.$this->$key;
+				elseif(!empty($this->$key))
+					$temp_nvp_str .= '&'.$value['name'].'='.$this->$key;
+			}
 		}
 		return $temp_nvp_str;
 	}
@@ -1690,4 +1761,5 @@ class phpPayPal {
 	}
 
 }  // END CLASS
+
 
