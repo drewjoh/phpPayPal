@@ -1098,6 +1098,36 @@ class phpPayPal {
 			is stored in $nvpstr
 			*/
 		$nvpstr = $this->generateNVPString('SetExpressCheckout');
+		
+		/* Construct and add any items found in this instance */
+		if(!empty($this->ItemsArray))
+		{
+			// Counter for the total of all the items put together
+			$total_items_amount = 0;
+			$total_items_tax_amount = 0;
+			// Go through the items array
+			foreach($this->ItemsArray as $key => $value)
+			{
+				// Get the array of the current item from the main array
+				$current_item = $this->ItemsArray[$key];
+				// Add it to the request string
+				$nvpstr .= "&L_NAME".$key."=".$current_item['name'].
+							"&L_NUMBER".$key."=".$current_item['number'].
+							"&L_QTY".$key."=".$current_item['quantity'].
+							"&L_TAXAMT".$key."=".$current_item['amount_tax'].
+							"&L_AMT".$key."=".$current_item['amount'];
+				// Add this item's amount to the total current count
+				$total_items_amount += ($current_item['amount'] * $current_item['quantity']);
+				$total_items_tax_amount += ($current_item['amount_tax'] * $current_item['quantity']);
+			}
+			// Set the amount_items for this instance and ITEMAMT added to the request string
+			$this->amount_items = $total_items_amount;
+			// Add this to our NVP string
+			$nvpstr .= "&ITEMAMT=".urlencode($total_items_amount);
+			// If our entire tax amount is not set, we will automatically set it based on the items tax amount
+			if($this->amount_tax == 0 OR empty($this->amount_tax))
+				$nvpstr .= "&TAXAMT=".urlencode($total_items_tax_amount);
+		}
 				
 		// decode the variables incase we still require access to them in our program
 		$this->urldecodeVariables();
