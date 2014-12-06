@@ -31,6 +31,7 @@ class phpPayPal {
 	public $API_USERNAME	= null;
 	public $API_PASSWORD	= null;
 	public $API_SIGNATURE	= null;
+    public $BUTTONSOURCE    = null;
 	
 	public $USE_PROXY		= null;
 	public $PROXY_HOST		= null;
@@ -942,6 +943,7 @@ class phpPayPal {
 		$this->API_USERNAME		= $config['api_username'];
 		$this->API_PASSWORD		= $config['api_password'];
 		$this->API_SIGNATURE	= $config['api_signature'];
+        $this->BUTTONSOURCE     = 'AngellEYE_SP_Drewjoh';
 		
 		$this->USE_PROXY		= $config['use_proxy'];
 		$this->PROXY_HOST		= $config['proxy_host'];
